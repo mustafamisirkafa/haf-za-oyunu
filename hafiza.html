@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧠 Hafıza Eşleştirme Oyunu</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { margin: 10px 0; }
+    #levelDisplay { font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+    #board {
+      display: grid;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .card {
+      width: 100px;
+      height: 100px;
+      position: relative;
+      cursor: pointer;
+      perspective: 800px;
+    }
+    .inner {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.5s;
+      transform-style: preserve-3d;
+      position: relative;
+    }
+    .flipped .inner { transform: rotateY(180deg); }
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .front {
+      transform: rotateY(180deg);
+    }
+    .front img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .back {
+      background: repeating-linear-gradient(
+        45deg,
+        #444,
+        #444 10px,
+        #555 10px,
+        #555 20px
+      );
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ccc;
+      font-size: 20px;
+    }
+    .matched {
+      pointer-events: none;
+      animation: matchedAnim 0.5s forwards;
+    }
+    @keyframes matchedAnim {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>🧠 Hafıza Eşleştirme Oyunu</h1>
+<div id="levelDisplay"></div>
+<div id="board"></div>
+
+<script>
+  const IMAGE_PATH = "https://drive.google.com/uc?export=view&id=";
+  const imageIDs = [/* 👑 BURAYA YUKARIDAKİ 41 ID'Yİ AYNEN YAPIŞTIRDIM 👆 */ 
+    "12-XeU3yVGmfF-XpGAM0Krif5jKo6wAI8","1EW8wfFFjWaMAWVk0gLfC1HqV2h2coB_2","17MFCJyAcwPYHJey_KOhEX1-F7KTfKybR","1ty0G0Kz5QFoSpYp-JaQgH2PjAlaNb3NE","1twKJkUmg0hjyWmkOvM6sd-g-UetkFA7T","1jiGObCfbSbIeSMK4FJe95W6-mz_dJqnT","1yqlJL948SqLqzRDPtWpf8I5YG91pWM5D","1tmdcsMccMQxlyQRv384KuFLCZaaOfsxb","19_PotPa65pLA3jyOcsU-xJLyEJfXoCak","1axrPNP9kxJtlQ4gTRNKu39z0JHcrS9co","1fCasuONfO07AG_GuIT9d9_N_ZWpvqXir","1PHXIt1pWSH1sWhE0k1fvua_JCA0MeB4e","11f3NiEYmkzK0Nn7q2JxL2f490dUR3T_e","1wHYpcXwRrjmtHpU2w5f2M7jgT4w_-ckR","17DkFVTsrokt4efFaYZyR87jgUuR1DSdZ","1Hd4-SWY2sXfpUZlg1pJXGjeuzwBd5xTX","1tZh58s_4sbIOvQVQyc4_RBWKDQlMCifK","192-8d3mQTTN-CQnWQ9m-EjP97IsUXULv","1fmSSYTF-g5cMdn-MlsyyBNvgyOO_G3gZ","1dU4fJIwbV7j_fED_nccYX4HIo6trHw-q","1AbQE5urddCTZJ1c9UhCAicY3w79o0L0D","1TtyMH88lRo7aH8MICv6tF39zcc3fQ4Bb","1T4mSUq33Js5ddaI8hslefPtqYEZ8PGAe","1lfFcXm0s1KcfMF0dTozJ1dhuhx7Zr9Yt","155z9fVoSoMSfcJpO1DQUrGo-9ownMu0-","1rmdrDkEhSj22OT2EvQb1FSjiFp3qp06X","1EMPKVAaALvMrXIYas-Enl-8yKPf-SPxH","1T9zr9lkPZNjRNW5iG7X4qMk36UdsmP9j","1z_lVqGlWxXqRDlvAcAC0YbXbkNCKfD4v","1RboGlYmiPGxnD_ZGrnwahKAjUVrbuVJG","1c7J3dbcxwwBWX7Xa4UacXRTkuEY5nKEE","10FojtJy1Jl9e2XYiOOLRdF96PPomK5FU","1czk_1QM5qMwizTc8dUZLQC44IpqIoweb","19H36aA8C7ZedmvUgmyD1SB5YC6fk_Fu8","1TFVpp3LfRIj9v8TRYKomd4eFXcGsF1Ru","1UCjNUNBSlB-cZLeBWXw-Wb_fwIK91bvW","1yBfVhZa2H_qrlutnGY63bqZOz8vmsBki","1rYXefytslppi_M_dc1ZVILI9xLbU_Wxw","1kjdEq2b_KUfwp4XYfjGdfYLGtKDU_bcC","1RFObWha61IEYV-DCvnoq2iOUINbfsBW7","1QLBg7do-71si7m_D9uLnVc7p5zPo9t-a"
+  ];
+
+  const TOTAL_LEVELS = 10;
+  let level = 1, flippedCards = [], matchedPairs = 0;
+
+  function startLevel() {
+    document.getElementById('levelDisplay').textContent = `Seviye: ${level}`;
+    const pairCount = level + 1;
+    const selected = pickRandomImages(pairCount);
+    const cards = shuffle([...selected, ...selected]);
+    renderBoard(cards);
+  }
+
+  function pickRandomImages(count) {
+    const picked = [];
+    for (let i = 0; i < count; i++) {
+      const index = Math.floor(Math.random() * imageIDs.length);
+      picked.push(`${IMAGE_PATH}${imageIDs[index]}`);
+    }
+    return picked;
+  }
+
+  function renderBoard(cards) {
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+    flippedCards = [];
+    matchedPairs = 0;
+    const cols = Math.ceil(Math.sqrt(cards.length));
+    board.style.gridTemplateColumns = `repeat(${cols}, 100px)`;
+    cards.forEach(src => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="inner">
+          <div class="front"><img src="${src}" alt=""></div>
+          <div class="back">🧠</div>
+        </div>`;
+      card.addEventListener('click', () => flipCard(card, src));
+      board.appendChild(card);
+    });
+  }
+
+  function flipCard(card, src) {
+    if (card.classList.contains('flipped') || flippedCards.length === 2) return;
+    card.classList.add('flipped');
+    flippedCards.push({card, src});
+    if (flippedCards.length === 2) {
+      const [a,b] = flippedCards;
+      if (a.src === b.src) {
+        setTimeout(() => {
+          a.card.classList.add('matched');
+          b.card.classList.add('matched');
+          matchedPairs++;
+          flippedCards = [];
+          if (matchedPairs === level + 1) setTimeout(nextLevel, 800);
+        }, 400);
+      } else {
+        setTimeout(() => {
+          a.card.classList.remove('flipped');
+          b.card.classList.remove('flipped');
+          flippedCards = [];
+        }, 800);
+      }
+    }
+  }
+
+  function nextLevel() {
+    level++;
+    if (level > TOTAL_LEVELS) {
+      alert("🎉 Tüm seviyeleri başarıyla tamamladın!");
+      level = 1;
+    }
+    startLevel();
+  }
+
+  function shuffle(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  startLevel();
+</script>
+
+</body>
+</html>
