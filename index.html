@@ -127,4 +127,80 @@
   function pickRandomImages(count) {
     const picked = [];
     for (let i = 0; i < count; i++) {
-      const num = Math.floor(Math.random() * TOTAL_IMAGES) +_*
+      const num = Math.floor(Math.random() * TOTAL_IMAGES) + 1;
+      picked.push(`${IMAGE_PATH}${num}.jpg`);
+    }
+    return picked;
+  }
+
+  function renderBoard(cards) {
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+    flippedCards = [];
+    matchedPairs = 0;
+
+    const cols = Math.ceil(Math.sqrt(cards.length));
+    board.style.gridTemplateColumns = `repeat(${cols}, 160px)`;
+
+    cards.forEach(src => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="inner">
+          <div class="front"><img src="${src}" alt=""></div>
+          <div class="back"></div>
+        </div>
+      `;
+      card.addEventListener('click', () => flipCard(card, src));
+      board.appendChild(card);
+    });
+  }
+
+  function flipCard(card, src) {
+    if (card.classList.contains('flipped') || flippedCards.length === 2) return;
+    card.classList.add('flipped');
+    flippedCards.push({card, src});
+
+    if (flippedCards.length === 2) {
+      const [a, b] = flippedCards;
+      if (a.src === b.src) {
+        setTimeout(() => {
+          a.card.classList.add('matched');
+          b.card.classList.add('matched');
+          matchedPairs++;
+          flippedCards = [];
+          if (matchedPairs === level + 1) setTimeout(nextLevel, 1000);
+        }, 400);
+      } else {
+        setTimeout(() => {
+          a.card.classList.remove('flipped');
+          b.card.classList.remove('flipped');
+          flippedCards = [];
+        }, 800);
+      }
+    }
+  }
+
+  function nextLevel() {
+    level++;
+    if (level > TOTAL_LEVELS) {
+      alert("🎉 Tüm seviyeleri başarıyla tamamladın!");
+      level = 1;
+    }
+    startLevel();
+  }
+
+  function shuffle(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  startLevel();
+</script>
+
+</body>
+</html>
