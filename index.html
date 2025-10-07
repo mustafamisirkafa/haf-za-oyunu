@@ -31,24 +31,25 @@
       border-radius: 8px;
     }
 
-   #board {
+#board {
   display: grid;
   gap: 10px;
-  justify-content: center;
   margin-top: 20px;
-  width: 100%;
-  max-width: 100%;
+  width: 100vw;              /* Ekranın tamamını kullan */
+  padding: 0 10px;           /* Kenarlardan az boşluk bırak */
   box-sizing: border-box;
-  padding: 0 8px;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  justify-items: center;     
+  overflow-x: hidden;       
 }
 
 .card {
   aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 140px;    /* 🔸 ÖNEMLİ: fazla büyük olursa taşma yapıyor */
-  min-width: 100px;    /* 🔸 Mobilde çok küçülmesini engeller */
+  max-width: 140px;         
+  min-width: 110px;       
 }
+
 
 
 
