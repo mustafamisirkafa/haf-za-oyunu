@@ -1,2 +1,2 @@
-# haf-za-oyunu
-anama hafıza oyunu
+# hafiza-oyunu
+anama hafiza oyunu
