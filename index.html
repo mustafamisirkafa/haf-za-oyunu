@@ -9,8 +9,8 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      overflow-y: auto;       /* 📌 Dikey kaydırma aktif */
-      overflow-x: hidden;     /* ↔️ Yatay scroll tamamen kapalı */
+      overflow-y: auto;
+      overflow-x: hidden;
       font-family: Arial, sans-serif;
       background: #e6e9f0;
     }
@@ -19,7 +19,7 @@
       text-align: center;
       padding: 10px;
       background: #f0f0f0;
-      position: sticky;       /* 📌 Üstte sabit kalır */
+      position: sticky;
       top: 0;
       z-index: 10;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -27,18 +27,22 @@
 
     h1 {
       margin: 5px 0;
-      font-size: 24px;
+      font-size: 22px;
     }
 
     #levelDisplay {
-      font-size: 18px;
-      font-weight: bold;
+      display: inline-block;
+      background: #333;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 16px;
       margin-top: 5px;
     }
 
     #board {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);  /* 📌 Maksimum 3 sütun */
+      grid-template-columns: repeat(3, 1fr); /* 📌 her satırda 3 kart */
       gap: 8px;
       width: 100%;
       padding: 10px;
@@ -47,9 +51,9 @@
     }
 
     .card {
+      width: 30vw;              /* 📱 ekranın %30’u → 3 kart sığar */
+      max-width: 120px;         /* çok büyük ekranlarda fazla büyümesin */
       aspect-ratio: 1 / 1;
-      width: 100%;
-      max-width: 95px;              /* 📱 Dikey ekranda 3 kartın sığması için ideal */
       border-radius: 10px;
       overflow: hidden;
       cursor: pointer;
@@ -101,7 +105,6 @@
       filter: brightness(1.2);
       border: 3px solid limegreen;
     }
-
   </style>
 </head>
 <body>
@@ -114,9 +117,9 @@
   <div id="board"></div>
 
   <script>
-    const IMAGE_PATH = "./images/";  // 📁 GitHub reposundaki images klasörü
-    const TOTAL_IMAGES = 41;         // Havuzdaki toplam resim sayısı
-    const TOTAL_LEVELS = 10;         // Toplam seviye sayısı
+    const IMAGE_PATH = "./images/";
+    const TOTAL_IMAGES = 41;
+    const TOTAL_LEVELS = 10;
 
     let level = 1;
     let flippedCards = [];
@@ -124,7 +127,7 @@
 
     function startLevel() {
       document.getElementById('levelDisplay').textContent = `Seviye: ${level}`;
-      const pairCount = level + 1; // Seviye 1 → 2 çift
+      const pairCount = level + 1;
       const selected = pickRandomImages(pairCount);
       const cards = shuffle([...selected, ...selected]);
       renderBoard(cards);
