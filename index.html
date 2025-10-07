@@ -33,24 +33,23 @@
 
 #board {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);  /* 📌 3 sütun sabit */
-  gap: 8px;                               /* 🔸 gap’ı biraz azalttık */
-  margin-top: 20px;
+  grid-template-columns: repeat(3, 1fr);  /* 👌 Sabit 3 sütun */
+  gap: 8px;                               /* Kart arası boşluk */
   width: 100%;
-  max-width: 100%;
+  margin-top: 20px;
+  padding: 0 4px;                         /* 🔸 Kenar boşluğu az */
   box-sizing: border-box;
-  padding: 0 5px;                         /* Kenar boşluklarını azalttık */
-  justify-items: center;
-  overflow-y: auto;                       /* Dikey scroll serbest */
-  overflow-x: hidden;                     /* 🔥 Yatay scroll tamamen kapalı */
-  max-height: 75vh;
+  max-height: 75vh;                       /* Dikey kaydırma alanı */
+  overflow-y: auto;                       /* ⬇️ Sadece dikey scroll */
+  overflow-x: hidden;                     /* ↔️ Yatay scroll kapalı */
 }
 
 .card {
   aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 100px;                       /* 📌 Burayı küçültmek kritik */
+  max-width: 95px;                        /* 📌 Mobilde 3 kartın sığması için ideal */
 }
+
 
 
 
