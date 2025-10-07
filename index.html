@@ -31,22 +31,25 @@
       border-radius: 8px;
     }
 
-    #board {
+   #board {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   justify-content: center;
   margin-top: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 0 10px;
+  padding: 0 8px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
 }
 
 .card {
-  aspect-ratio: 1 / 1;   /* Kartlar kare şeklinde kalır */
+  aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 170px;     /* masaüstünde çok büyümesin */
+  max-width: 140px;    /* 🔸 ÖNEMLİ: fazla büyük olursa taşma yapıyor */
+  min-width: 100px;    /* 🔸 Mobilde çok küçülmesini engeller */
 }
+
 
 
     .inner {
