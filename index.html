@@ -35,20 +35,20 @@
   display: grid;
   gap: 10px;
   margin-top: 20px;
-  width: 100%;                         /* ✅ 100vw değil */
+  width: 100%;
   padding: 0 10px;
   box-sizing: border-box;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-template-columns: repeat(3, 1fr);  /* 👈 Maksimum 3 sütun sabit */
   justify-items: center;
-  overflow-x: hidden;                  /* sağ taşmayı engeller */
 }
 
 .card {
   aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 140px;
-  min-width: 110px;
+  max-width: 140px;  /* Mobil ekranlara sığacak ideal boyut */
+  min-width: 100px;
 }
+
 
 
 
