@@ -1,36 +1,46 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>🧠 Hafıza Eşleştirme Oyunu</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f0f2f5;
+      background: #e6e9f0;
       display: flex;
       flex-direction: column;
       align-items: center;
       margin: 0;
       padding: 20px;
     }
-    h1 { margin: 10px 0; }
-    #levelDisplay { font-weight: bold; font-size: 18px; margin-bottom: 10px; }
+
+    h1 {
+      margin: 10px 0;
+      font-size: 28px;
+    }
+
+    #levelDisplay {
+      font-weight: bold;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
 
     #board {
       display: grid;
-      gap: 10px;
+      gap: 15px;
       justify-content: center;
       margin-top: 20px;
     }
 
     .card {
-      width: 100px;
-      height: 100px;
+      width: 160px;
+      height: 160px;
       position: relative;
       cursor: pointer;
-      perspective: 800px;
+      perspective: 1000px;
     }
+
     .inner {
       width: 100%;
       height: 100%;
@@ -38,47 +48,56 @@
       transform-style: preserve-3d;
       position: relative;
     }
-    .flipped .inner { transform: rotateY(180deg); }
+
+    .flipped .inner {
+      transform: rotateY(180deg);
+    }
+
     .front, .back {
       position: absolute;
       width: 100%;
       height: 100%;
       backface-visibility: hidden;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
+
     .front {
       transform: rotateY(180deg);
     }
+
     .front img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+
     .back {
       background: repeating-linear-gradient(
         45deg,
-        #444,
-        #444 10px,
-        #555 10px,
-        #555 20px
+        #666,
+        #666 15px,
+        #777 15px,
+        #777 30px
       );
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ccc;
-      font-size: 20px;
+    }
+
+    .matched .inner {
+      animation: matchGlow 0.8s ease-in-out;
+      pointer-events: none;
+    }
+
+    @keyframes matchGlow {
+      0%   { box-shadow: 0 0 0px 0px #fff; transform: scale(1); }
+      50%  { box-shadow: 0 0 25px 10px #fff; transform: scale(1.05); }
+      100% { box-shadow: 0 0 0px 0px #fff; transform: scale(1); }
     }
 
     .matched {
       pointer-events: none;
-      animation: matchedAnim 0.5s forwards;
-    }
-
-    @keyframes matchedAnim {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.2); opacity: 0.8; }
-      100% { transform: scale(0); opacity: 0; }
+      opacity: 0.9;
+      filter: grayscale(30%);
     }
   </style>
 </head>
@@ -89,10 +108,9 @@
 <div id="board"></div>
 
 <script>
-  // 📌 Senin GitHub repo'nun görsel URL'si
-  const BASE_URL = "https://raw.githubusercontent.com/mustafamisirkafa/haf-za-oyunu/main/images/";
-  const TOTAL_IMAGES = 41;   // Fotoğraf sayısı
-  const TOTAL_LEVELS = 10;   // Toplam seviye sayısı
+  const IMAGE_PATH = "./images/";
+  const TOTAL_IMAGES = 41;
+  const TOTAL_LEVELS = 10;
 
   let level = 1;
   let flippedCards = [];
@@ -109,83 +127,4 @@
   function pickRandomImages(count) {
     const picked = [];
     for (let i = 0; i < count; i++) {
-      const num = Math.floor(Math.random() * TOTAL_IMAGES) + 1;
-      picked.push(`${BASE_URL}${num}.jpg`);
-    }
-    return picked;
-  }
-
-  function renderBoard(cards) {
-    const board = document.getElementById('board');
-    board.innerHTML = '';
-    flippedCards = [];
-    matchedPairs = 0;
-
-    const cols = Math.ceil(Math.sqrt(cards.length));
-    board.style.gridTemplateColumns = `repeat(${cols}, 100px)`;
-
-    cards.forEach(src => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="inner">
-          <div class="front"><img src="${src}" alt=""></div>
-          <div class="back">🧠</div>
-        </div>
-      `;
-      card.addEventListener('click', () => flipCard(card, src));
-      board.appendChild(card);
-    });
-  }
-
-  function flipCard(card, src) {
-    if (card.classList.contains('flipped') || flippedCards.length === 2) return;
-    card.classList.add('flipped');
-    flippedCards.push({card, src});
-
-    if (flippedCards.length === 2) {
-      const [a, b] = flippedCards;
-      if (a.src === b.src) {
-        setTimeout(() => {
-          a.card.classList.add('matched');
-          b.card.classList.add('matched');
-          matchedPairs++;
-          flippedCards = [];
-          if (matchedPairs === level + 1) {
-            setTimeout(nextLevel, 800);
-          }
-        }, 400);
-      } else {
-        setTimeout(() => {
-          a.card.classList.remove('flipped');
-          b.card.classList.remove('flipped');
-          flippedCards = [];
-        }, 800);
-      }
-    }
-  }
-
-  function nextLevel() {
-    level++;
-    if (level > TOTAL_LEVELS) {
-      alert("🎉 Tüm seviyeleri başarıyla tamamladın!");
-      level = 1;
-    }
-    startLevel();
-  }
-
-  function shuffle(array) {
-    let arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  startLevel();
-</script>
-
-</body>
-</html>
-
+      const num = Math.floor(Math.random() * TOTAL_IMAGES) +_*
