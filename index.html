@@ -31,24 +31,46 @@
       border-radius: 8px;
     }
 
-#board {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);  /* 👌 Sabit 3 sütun */
-  gap: 8px;                               /* Kart arası boşluk */
-  width: 100%;
-  margin-top: 20px;
-  padding: 0 4px;                         /* 🔸 Kenar boşluğu az */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* Sayfa genelinde scroll'u kapat */
+}
+
+#gameContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;       /* Tam ekran yüksekliği */
   box-sizing: border-box;
-  max-height: 75vh;                       /* Dikey kaydırma alanı */
-  overflow-y: auto;                       /* ⬇️ Sadece dikey scroll */
-  overflow-x: hidden;                     /* ↔️ Yatay scroll kapalı */
+  overflow: hidden;
+}
+
+#header {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 10px;
+  background: #f0f0f0;
+}
+
+#board {
+  flex: 1 1 auto;                     /* 📌 Geri kalan alanı kapla */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  padding: 0 6px;
+  box-sizing: border-box;
+  overflow-y: auto;                   /* ⬇️ Dikey scroll aktif */
+  overflow-x: hidden;                 /* ↔️ Yatay scroll yok */
 }
 
 .card {
   aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 95px;                        /* 📌 Mobilde 3 kartın sığması için ideal */
+  max-width: 100px;
 }
+
 
 
 
