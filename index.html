@@ -38,16 +38,19 @@
   width: 100%;
   padding: 0 10px;
   box-sizing: border-box;
-  grid-template-columns: repeat(3, 1fr);  /* 👈 Maksimum 3 sütun sabit */
+  grid-template-columns: repeat(3, 1fr);  /* ✅ En fazla 3 kart yan yana */
   justify-items: center;
+  overflow-y: auto;                      /* 👈 Aşağı kaydırma aktif */
+  max-height: 75vh;                      /* 📌 Ekranda taşmadan scroll alanı */
 }
 
 .card {
   aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 140px;  /* Mobil ekranlara sığacak ideal boyut */
+  max-width: 120px;  /* 📱 dik ekranda rahat sığması için ideal */
   min-width: 100px;
 }
+
 
 
 
