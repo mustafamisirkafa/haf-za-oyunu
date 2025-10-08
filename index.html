@@ -64,19 +64,30 @@
     opacity: 0;
     transition: opacity .4s ease;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 14px;
+    grid-auto-rows: 1fr;
     justify-content: center;
     align-content: center;
     place-items: center;
+    gap: 12px;
     padding: 16px;
-    height: calc(100dvh - 80px);
-    overflow: hidden;
+    height: calc(100dvh - 90px);
+    overflow: auto;
   }
   #board.show {
     visibility: visible;
     opacity: 1;
   }
+  /* Ekrana göre kolon sayısı */
+  @media (max-width: 480px) {
+    #board.show { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (min-width: 481px) and (max-width: 900px) {
+    #board.show { grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (min-width: 901px) {
+    #board.show { grid-template-columns: repeat(6, 1fr); }
+  }
+
   .card {
     aspect-ratio:1/1;
     width:100%;
@@ -165,13 +176,13 @@
 <audio id="levelUpSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3"></audio>
 
 <script>
-const IMAGE_PATH = "./images/";
-const TOTAL_IMAGES = 43;
-const TOTAL_LEVELS = 10;
-const MATCH_SCORE = 10;
-const FAIL_PENALTY = 2;
+const IMAGE_PATH="./images/";
+const TOTAL_IMAGES=43;
+const TOTAL_LEVELS=10;
+const MATCH_SCORE=10;
+const FAIL_PENALTY=2;
 
-let level=1, score=0, flipped=[], matchedPairs=0, soundOn=true, paused=false;
+let level=1,score=0,flipped=[],matchedPairs=0,soundOn=true,paused=false;
 
 const board=document.getElementById('board');
 const menu=document.getElementById('menu');
@@ -210,7 +221,6 @@ function startGame(){
   pauseMenu.style.display='none';
   level=1;score=0;startLevel();
 }
-
 function returnToMenu(){
   header.style.display='none';
   board.classList.remove('show');
@@ -220,7 +230,7 @@ function returnToMenu(){
 function startLevel(){
   levelEl.textContent=level;
   scoreEl.textContent=score;
-  flipped=[]; matchedPairs=0;
+  flipped=[];matchedPairs=0;
   const pairCount=Math.min(6+(level-1)*2,TOTAL_IMAGES/2);
   const selected=pickUniqueRandomImages(pairCount);
   const cards=shuffle([...selected,...selected]);
@@ -242,11 +252,7 @@ function renderBoard(cards){
   cards.forEach(src=>{
     const card=document.createElement('div');
     card.className='card';
-    card.innerHTML=`
-      <div class="inner">
-        <div class="front"><img src="${src}" alt=""></div>
-        <div class="back"></div>
-      </div>`;
+    card.innerHTML=`<div class="inner"><div class="front"><img src="${src}" alt=""></div><div class="back"></div></div>`;
     card.addEventListener('click',()=>flipCard(card,src));
     board.appendChild(card);
   });
@@ -263,23 +269,14 @@ function flipCard(card,src){
     if(a.src===b.src){
       setTimeout(()=>{
         if(soundOn){matchSound.currentTime=0;matchSound.play().catch(()=>{});}
-        a.card.classList.add('matched');
-        b.card.classList.add('matched');
-        flipped=[];
-        matchedPairs++;
-        score+=MATCH_SCORE;
-        scoreEl.textContent=score;
+        a.card.classList.add('matched');b.card.classList.add('matched');
+        flipped=[];matchedPairs++;score+=MATCH_SCORE;scoreEl.textContent=score;
         if(matchedPairs===Math.min(6+(level-1)*2,TOTAL_IMAGES/2))
           setTimeout(()=>levelComplete(),350);
       },280);
-    } else {
-      score=Math.max(0,score-FAIL_PENALTY);
-      scoreEl.textContent=score;
-      setTimeout(()=>{
-        a.card.classList.remove('flipped');
-        b.card.classList.remove('flipped');
-        flipped=[];
-      },2000);
+    }else{
+      score=Math.max(0,score-FAIL_PENALTY);scoreEl.textContent=score;
+      setTimeout(()=>{a.card.classList.remove('flipped');b.card.classList.remove('flipped');flipped=[];},2000);
     }
   }
 }
@@ -292,13 +289,11 @@ function levelComplete(){
   if(level>10){alert(`🎉 Oyun bitti!\nToplam puan: ${score}`);returnToMenu();}
   else setTimeout(()=>startLevel(),1000);
 }
-
 function showToastStars(n){
   toast.textContent='⭐'.repeat(n);
   toast.style.display='inline-flex';
   setTimeout(()=>toast.style.display='none',1200);
 }
-
 function shuffle(arr){
   let a=[...arr];
   for(let i=a.length-1;i>0;i--){
