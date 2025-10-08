@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🧠 Hafıza Eşleştirme — Otomatik Görsel Algılayan Deluxe</title>
+<title>🧠 Hafıza Eşleştirme — +2 Çift Artan Deluxe</title>
 <style>
   :root {
     --accent:#f77f00;
     --bg-a:#ff6f61; --bg-b:#6a5acd; --bg-c:#00b4d8; --bg-d:#ffd166;
-    --cols: 3;
+    --cols: 4;
   }
   html,body {
     margin:0; padding:0; height:100%;
@@ -31,7 +31,6 @@
     z-index:-1; pointer-events:none; opacity:.6;
   }
 
-  /* Menü */
   #menu {
     position:fixed; inset:0; display:flex; flex-direction:column; gap:14px;
     justify-content:center; align-items:center; text-align:center;
@@ -43,7 +42,6 @@
     box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
 
-  /* Üst bar */
   #header {
     position:sticky; top:0; z-index:4; display:none;
     background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
@@ -60,7 +58,6 @@
     padding:6px 10px; border-radius:999px; cursor:pointer; font-size:14px;
   }
 
-  /* Oyun alanı */
   #board {
     display:none;
     grid-template-columns: repeat(var(--cols), 1fr);
@@ -101,7 +98,6 @@
     background-size:20px 20px; border:2px solid #fff;
   }
 
-  /* Eşleşme efekti */
   .matched {
     pointer-events:none;
     border:3px solid #32d74b;
@@ -137,7 +133,7 @@
 
 <section id="menu">
   <h1>🧠 Hafıza Eşleştirme</h1>
-  <p>Resimler otomatik algılanır · 8 kartla başlar</p>
+  <p>12 kartla başlar · her seviye +2 çift artar</p>
   <button class="menu-btn" id="playBtn">🎮 Oyuna Başla</button>
 </section>
 
@@ -163,7 +159,7 @@
 
 <script>
 const IMAGE_PATH = "./images/";
-let TOTAL_IMAGES = 0; // otomatik sayılacak
+let TOTAL_IMAGES = 0;
 const TOTAL_LEVELS = 10;
 const MATCH_SCORE = 10;
 const FAIL_PENALTY = 2;
@@ -200,12 +196,11 @@ soundToggle.addEventListener('click',()=>setSound(!soundOn));
 document.body.addEventListener('click',()=>[flipSound,matchSound,levelUpSound].forEach(a=>{a.volume=0;a.play().catch(()=>{});setTimeout(()=>{a.pause();a.currentTime=0;a.volume=1;},50)}),{once:true});
 
 async function detectImages(){
-  // GitHub Pages veya yerel sunucuda images klasörünü taramak için fetch trick
   try{
     const res = await fetch(IMAGE_PATH);
     const text = await res.text();
     const matches = [...text.matchAll(/href="(\d+\.jpg)"/g)];
-    TOTAL_IMAGES = matches.length || 43; // fallback 43
+    TOTAL_IMAGES = matches.length || 43;
   }catch{
     TOTAL_IMAGES = 43;
   }
@@ -233,10 +228,11 @@ function startLevel(){
   levelEl.textContent=level;
   scoreEl.textContent=score;
   mistakes=0; flipped=[]; matchedPairs=0;
-  const pairCount=Math.min(4+level,TOTAL_IMAGES/2); // 8 karttan başlar
+
+  const pairCount=Math.min(6 + (level-1)*2, TOTAL_IMAGES/2); // 🔥 her seviye +2 çift
   const selected=pickUniqueRandomImages(pairCount);
   const cards=shuffle([...selected,...selected]);
-  const colCount=cards.length<=8?4:cards.length<=12?4:cards.length<=20?5:6;
+  const colCount=cards.length<=12?4:cards.length<=20?5:6;
   board.style.setProperty('--cols',colCount);
   renderBoard(cards);
 }
@@ -283,10 +279,10 @@ function flipCard(card,src){
         matchedPairs++;
         score+=MATCH_SCORE;
         scoreEl.textContent=score;
-        if(matchedPairs===(Math.min(4+level,TOTAL_IMAGES/2)))setTimeout(()=>levelComplete(),350);
+        if(matchedPairs===Math.min(6+(level-1)*2,TOTAL_IMAGES/2))
+          setTimeout(()=>levelComplete(),350);
       },280);
     } else {
-      mistakes++;
       score=Math.max(0,score-FAIL_PENALTY);
       scoreEl.textContent=score;
       setTimeout(()=>{
@@ -322,7 +318,7 @@ function shuffle(arr){
   return a;
 }
 
-/* BALON & KONFETİ (öncekiyle aynı) */
+/* BALON ANİMASYONU */
 const bubbleCanvas=document.getElementById('bubbles');
 const bctx=bubbleCanvas.getContext('2d');
 let bubbles=[];
@@ -340,6 +336,7 @@ function drawBubbles(){
 }
 drawBubbles();
 
+/* KONFETİ */
 const confettiCanvas=document.getElementById('confetti');
 const cctx=confettiCanvas.getContext('2d');
 function resizeConfetti(){confettiCanvas.width=window.innerWidth;confettiCanvas.height=window.innerHeight;}
