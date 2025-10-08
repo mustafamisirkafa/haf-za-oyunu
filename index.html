@@ -3,160 +3,88 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🧠 Hafıza Eşleştirme — Deluxe</title>
+<title>🧠 Hafıza Oyunu Deluxe</title>
 <style>
-  :root {
-    --accent:#f77f00;
-    --bg-a:#ff6f61; --bg-b:#6a5acd; --bg-c:#00b4d8; --bg-d:#ffd166;
-  }
-  html,body {
-    margin:0; padding:0; height:100%;
-    font-family: Arial, Helvetica, sans-serif; color:#fff;
-    overflow:hidden; background:#111;
-  }
-  body {
-    background: linear-gradient(270deg, var(--bg-a), var(--bg-b), var(--bg-c), var(--bg-d));
-    background-size: 800% 800%;
-    animation: gradientFlow 24s ease infinite;
-  }
-  @keyframes gradientFlow {
-    0% { background-position: 0% 50% }
-    50% { background-position: 100% 50% }
-    100% { background-position: 0% 50% }
-  }
-  canvas#bubbles {
-    position:fixed; inset:0; width:100%; height:100%;
-    z-index:-1; pointer-events:none; opacity:.6;
-  }
-
-  /* Menü */
-  #menu {
-    position:fixed; inset:0; display:flex; flex-direction:column; gap:14px;
-    justify-content:center; align-items:center; text-align:center;
-    background:rgba(0,0,0,.45); backdrop-filter: blur(8px); z-index:5;
-  }
-  .menu-btn {
-    background:var(--accent); color:#fff; border:none; cursor:pointer;
-    padding:12px 22px; border-radius:12px; font-size:18px; width:220px;
-    box-shadow:0 6px 18px rgba(0,0,0,.25);
-  }
-
-  /* Üst bar */
-  #header {
-    position:sticky; top:0; z-index:4; display:none;
-    background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
-    padding:10px; display:flex; gap:10px; align-items:center; justify-content:center;
-    box-shadow:0 2px 10px rgba(0,0,0,.25);
-  }
-  .badge {
-    display:inline-flex; align-items:center; gap:8px;
-    background:#00000066; border:1px solid #ffffff29;
-    padding:6px 10px; border-radius:999px; font-weight:700; font-size:14px;
-  }
-  .sound-btn, .pause-btn {
-    background:#ffffff22; border:1px solid #ffffff33; color:#fff;
-    padding:6px 10px; border-radius:999px; cursor:pointer; font-size:14px;
-  }
-
-  /* Oyun alanı */
-  #board {
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity .4s ease;
-    display: grid;
-    grid-auto-rows: 1fr;
-    justify-content: center;
-    align-content: center;
-    place-items: center;
-    gap: 12px;
-    padding: 16px;
-    height: calc(100dvh - 90px);
-    overflow: auto;
-  }
-  #board.show {
-    visibility: visible;
-    opacity: 1;
-  }
-  /* Ekrana göre kolon sayısı */
-  @media (max-width: 480px) {
-    #board.show { grid-template-columns: repeat(3, 1fr); }
-  }
-  @media (min-width: 481px) and (max-width: 900px) {
-    #board.show { grid-template-columns: repeat(4, 1fr); }
-  }
-  @media (min-width: 901px) {
-    #board.show { grid-template-columns: repeat(6, 1fr); }
-  }
-
-  .card {
-    aspect-ratio:1/1;
-    width:100%;
-    border-radius:14px;
-    overflow:hidden;
-    cursor:pointer;
-    perspective:900px;
-    box-shadow:0 6px 18px rgba(0,0,0,.25);
-    background:#000;
-  }
-  .inner {
-    width:100%; height:100%; transform-style:preserve-3d;
-    transition: transform .38s cubic-bezier(.2,.8,.2,1), filter .2s;
-  }
-  .flipped .inner { transform: rotateY(180deg); }
-  .front, .back {
-    position:absolute; inset:0; backface-visibility:hidden; border-radius:14px;
-  }
-  .front { transform: rotateY(180deg); }
-  .front img { width:100%; height:100%; object-fit:cover; display:block; }
-  .back {
-    background-color:#d62828;
-    background-image:
-      repeating-linear-gradient(45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px),
-      repeating-linear-gradient(-45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px);
-    background-size:20px 20px; border:2px solid #fff;
-  }
-
-  .matched {
-    pointer-events:none;
-    border:3px solid #32d74b;
-    filter:brightness(1.2);
-    animation: zoomFlash .6s ease both;
-  }
-  @keyframes zoomFlash{
-    0%{ transform: scale(1)}
-    40%{ transform: scale(1.25); box-shadow:0 0 18px #32d74b}
-    100%{ transform: scale(1); box-shadow:none}
-  }
-
-  #toast {
-    position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
-    background:#00000070; backdrop-filter: blur(4px);
-    padding:10px 14px; border-radius:999px; display:none; gap:8px; align-items:center; z-index:6;
-    border:1px solid #ffffff2e;
-  }
-
-  #pauseMenu {
-    position:fixed; inset:0; display:none; flex-direction:column; gap:14px;
-    justify-content:center; align-items:center; text-align:center;
-    background:rgba(0,0,0,.65); backdrop-filter: blur(8px); z-index:7;
-  }
-
-  canvas#confetti { position:fixed; inset:0; pointer-events:none; z-index:9; display:none; }
+:root{
+  --accent:#f77f00;
+  --bg-a:#ff6f61;--bg-b:#6a5acd;--bg-c:#00b4d8;--bg-d:#ffd166;
+}
+html,body{margin:0;padding:0;height:100%;font-family:Arial,Helvetica,sans-serif;color:#fff;overflow:hidden;background:#111;}
+body{
+  background:linear-gradient(270deg,var(--bg-a),var(--bg-b),var(--bg-c),var(--bg-d));
+  background-size:800% 800%;
+  animation:gradientFlow 24s ease infinite;
+}
+@keyframes gradientFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+canvas#bubbles{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:.6;}
+#menu{
+  position:fixed;inset:0;display:flex;flex-direction:column;gap:14px;
+  justify-content:center;align-items:center;text-align:center;
+  background:rgba(0,0,0,.45);backdrop-filter:blur(8px);z-index:5;
+}
+.menu-btn{
+  background:var(--accent);color:#fff;border:none;cursor:pointer;
+  padding:12px 22px;border-radius:12px;font-size:18px;width:240px;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+#header{
+  position:sticky;top:0;z-index:4;display:none;
+  background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+  padding:10px;display:flex;gap:10px;align-items:center;justify-content:center;
+  box-shadow:0 2px 10px rgba(0,0,0,.25);
+}
+.badge{display:inline-flex;align-items:center;gap:8px;background:#00000066;border:1px solid #ffffff29;padding:6px 10px;border-radius:999px;font-weight:700;font-size:14px;}
+.sound-btn,.pause-btn{
+  background:#ffffff22;border:1px solid #ffffff33;color:#fff;
+  padding:6px 10px;border-radius:999px;cursor:pointer;font-size:14px;
+}
+#board{
+  display:grid;gap:10px;justify-content:center;align-content:center;
+  padding:16px;height:calc(100dvh - 90px);overflow:auto;
+}
+.card{
+  border-radius:14px;overflow:hidden;cursor:pointer;perspective:900px;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);background:#000;
+}
+.inner{width:100%;height:100%;transform-style:preserve-3d;transition:transform .38s cubic-bezier(.2,.8,.2,1),filter .2s;}
+.flipped .inner{transform:rotateY(180deg);}
+.front,.back{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px;}
+.front{transform:rotateY(180deg);}
+.front img{width:100%;height:100%;object-fit:cover;display:block;background:#222;}
+.back{
+  background-color:#d62828;
+  background-image:repeating-linear-gradient(45deg,#fff 0px,#fff 3px,transparent 3px,transparent 10px),
+                   repeating-linear-gradient(-45deg,#fff 0px,#fff 3px,transparent 3px,transparent 10px);
+  background-size:20px 20px;border:2px solid #fff;
+}
+.matched{pointer-events:none;border:3px solid #32d74b;filter:brightness(1.2);animation:zoomFlash .6s ease both;}
+@keyframes zoomFlash{0%{transform:scale(1)}40%{transform:scale(1.25);box-shadow:0 0 18px #32d74b}100%{transform:scale(1);box-shadow:none}}
+#toast{
+  position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+  background:#00000070;backdrop-filter:blur(4px);
+  padding:10px 14px;border-radius:999px;display:none;gap:8px;align-items:center;z-index:6;border:1px solid #ffffff2e;
+}
+#pauseMenu{
+  position:fixed;inset:0;display:none;flex-direction:column;gap:14px;
+  justify-content:center;align-items:center;text-align:center;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);z-index:7;
+}
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:9;display:none;}
 </style>
 </head>
 <body>
-
 <canvas id="bubbles"></canvas>
 <canvas id="confetti"></canvas>
 
 <section id="menu">
-  <h1>🧠 Hafıza Eşleştirme</h1>
-  <p>12 kartla başlar · her seviye +2 çift artar</p>
-  <button class="menu-btn" id="playBtn">🎮 Oyuna Başla</button>
+  <h1>🧠 Hafıza Oyunu Deluxe</h1>
+  <p>43 resim · sesli · animasyonlu</p>
+  <button class="menu-btn" onclick="startGame(12)">🟢 Kolay (12 kart)</button>
+  <button class="menu-btn" onclick="startGame(18)">🟠 Orta (18 kart)</button>
+  <button class="menu-btn" onclick="startGame(24)">🔴 Zor (24 kart)</button>
 </section>
 
 <header id="header" style="display:none">
-  <div class="badge">Seviye: <span id="levelDisplay">1</span></div>
   <div class="badge">Puan: <span id="scoreDisplay">0</span></div>
   <button class="sound-btn" id="soundToggle">🔊 Ses: Açık</button>
   <button class="pause-btn" id="pauseBtn">⏸ Durdur</button>
@@ -171,96 +99,72 @@
   <button class="menu-btn" id="quitBtn">🏠 Ana Menü</button>
 </div>
 
-<audio id="flipSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
-<audio id="matchSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3"></audio>
-<audio id="levelUpSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3"></audio>
+<audio id="flipSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
+<audio id="matchSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3"></audio>
+<audio id="levelUpSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3"></audio>
 
 <script>
 const IMAGE_PATH="./images/";
 const TOTAL_IMAGES=43;
-const TOTAL_LEVELS=10;
-const MATCH_SCORE=10;
-const FAIL_PENALTY=2;
+const MATCH_SCORE=10, FAIL_PENALTY=2;
+let flipped=[],matchedPairs=0,score=0,soundOn=true,paused=false,cardCount=12;
 
-let level=1,score=0,flipped=[],matchedPairs=0,soundOn=true,paused=false;
+const board=document.getElementById('board'),
+      header=document.getElementById('header'),
+      menu=document.getElementById('menu'),
+      pauseMenu=document.getElementById('pauseMenu'),
+      scoreEl=document.getElementById('scoreDisplay'),
+      soundToggle=document.getElementById('soundToggle'),
+      toast=document.getElementById('toast'),
+      pauseBtn=document.getElementById('pauseBtn'),
+      resumeBtn=document.getElementById('resumeBtn'),
+      newGameBtn=document.getElementById('newGameBtn'),
+      quitBtn=document.getElementById('quitBtn'),
+      flipSound=document.getElementById('flipSound'),
+      matchSound=document.getElementById('matchSound'),
+      levelUpSound=document.getElementById('levelUpSound');
 
-const board=document.getElementById('board');
-const menu=document.getElementById('menu');
-const header=document.getElementById('header');
-const pauseMenu=document.getElementById('pauseMenu');
-const levelEl=document.getElementById('levelDisplay');
-const scoreEl=document.getElementById('scoreDisplay');
-const soundToggle=document.getElementById('soundToggle');
-const toast=document.getElementById('toast');
-const pauseBtn=document.getElementById('pauseBtn');
-const resumeBtn=document.getElementById('resumeBtn');
-const newGameBtn=document.getElementById('newGameBtn');
-const quitBtn=document.getElementById('quitBtn');
-const flipSound=document.getElementById('flipSound');
-const matchSound=document.getElementById('matchSound');
-const levelUpSound=document.getElementById('levelUpSound');
-
-document.getElementById('playBtn').addEventListener('click',startGame);
 pauseBtn.addEventListener('click',()=>{paused=true;pauseMenu.style.display='flex';});
 resumeBtn.addEventListener('click',()=>{paused=false;pauseMenu.style.display='none';});
-newGameBtn.addEventListener('click',()=>{pauseMenu.style.display='none';startGame();});
-quitBtn.addEventListener('click',()=>{pauseMenu.style.display='none';returnToMenu();});
-
-function setSound(on){
-  soundOn=on;
-  [flipSound,matchSound,levelUpSound].forEach(a=>a.muted=!on);
-  soundToggle.textContent=on?"🔊 Ses: Açık":"🔇 Ses: Kapalı";
-}
+newGameBtn.addEventListener('click',()=>{pauseMenu.style.display='none';menu.style.display='flex';board.innerHTML='';header.style.display='none';});
+quitBtn.addEventListener('click',()=>{pauseMenu.style.display='none';menu.style.display='flex';board.innerHTML='';header.style.display='none';});
 soundToggle.addEventListener('click',()=>setSound(!soundOn));
 document.body.addEventListener('click',()=>[flipSound,matchSound,levelUpSound].forEach(a=>{a.volume=0;a.play().catch(()=>{});setTimeout(()=>{a.pause();a.currentTime=0;a.volume=1;},50)}),{once:true});
 
-function startGame(){
-  menu.style.display='none';
-  header.style.display='flex';
-  board.classList.add('show');
-  pauseMenu.style.display='none';
-  level=1;score=0;startLevel();
-}
-function returnToMenu(){
-  header.style.display='none';
-  board.classList.remove('show');
-  menu.style.display='flex';
-}
+function setSound(on){soundOn=on;[flipSound,matchSound,levelUpSound].forEach(a=>a.muted=!on);soundToggle.textContent=on?"🔊 Ses: Açık":"🔇 Ses: Kapalı";}
 
-function startLevel(){
-  levelEl.textContent=level;
-  scoreEl.textContent=score;
-  flipped=[];matchedPairs=0;
-  const pairCount=Math.min(6+(level-1)*2,TOTAL_IMAGES/2);
+function startGame(count){
+  cardCount=count;score=0;matchedPairs=0;
+  menu.style.display='none';header.style.display='flex';
+  renderBoard();
+}
+function renderBoard(){
+  board.innerHTML='';
+  let cols=Math.ceil(Math.sqrt(cardCount));
+  if(cardCount===12) cols=4; if(cardCount===18) cols=6; if(cardCount===24) cols=6;
+  board.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  const pairCount=cardCount/2;
   const selected=pickUniqueRandomImages(pairCount);
   const cards=shuffle([...selected,...selected]);
-  renderBoard(cards);
-}
-
-function pickUniqueRandomImages(count){
-  const available=Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
-  const out=[];
-  while(out.length<count&&available.length>0){
-    const idx=Math.floor(Math.random()*available.length);
-    out.push(available.splice(idx,1)[0]);
-  }
-  return out;
-}
-
-function renderBoard(cards){
-  board.innerHTML='';
   cards.forEach(src=>{
     const card=document.createElement('div');
     card.className='card';
-    card.innerHTML=`<div class="inner"><div class="front"><img src="${src}" alt=""></div><div class="back"></div></div>`;
+    card.style.width=`${Math.min(120, Math.floor(window.innerWidth/cols)-12)}px`;
+    card.style.height=card.style.width;
+    card.innerHTML=`<div class="inner"><div class="front"><img src="${src}" alt="resim" onerror="this.style.background='#333';"></div><div class="back"></div></div>`;
     card.addEventListener('click',()=>flipCard(card,src));
     board.appendChild(card);
   });
 }
 
+function pickUniqueRandomImages(count){
+  const all=Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
+  const chosen=[];while(chosen.length<count&&all.length>0){const idx=Math.floor(Math.random()*all.length);chosen.push(all.splice(idx,1)[0]);}
+  return chosen;
+}
 function flipCard(card,src){
-  if(paused) return;
-  if(card.classList.contains('flipped')||flipped.length===2) return;
+  if(paused)return;
+  if(card.classList.contains('flipped')||flipped.length===2)return;
   if(soundOn){flipSound.currentTime=0;flipSound.play().catch(()=>{});}
   card.classList.add('flipped');
   flipped.push({card,src});
@@ -271,79 +175,51 @@ function flipCard(card,src){
         if(soundOn){matchSound.currentTime=0;matchSound.play().catch(()=>{});}
         a.card.classList.add('matched');b.card.classList.add('matched');
         flipped=[];matchedPairs++;score+=MATCH_SCORE;scoreEl.textContent=score;
-        if(matchedPairs===Math.min(6+(level-1)*2,TOTAL_IMAGES/2))
-          setTimeout(()=>levelComplete(),350);
-      },280);
+        if(matchedPairs===cardCount/2)setTimeout(levelComplete,400);
+      },250);
     }else{
       score=Math.max(0,score-FAIL_PENALTY);scoreEl.textContent=score;
-      setTimeout(()=>{a.card.classList.remove('flipped');b.card.classList.remove('flipped');flipped=[];},2000);
+      setTimeout(()=>{a.card.classList.remove('flipped');b.card.classList.remove('flipped');flipped=[];},1200);
     }
   }
 }
-
 function levelComplete(){
-  showToastStars(3);
-  fireConfetti(1000);
+  showToastStars(3);fireConfetti(1000);
   if(soundOn){levelUpSound.currentTime=0;levelUpSound.play().catch(()=>{});}
-  level++;
-  if(level>10){alert(`🎉 Oyun bitti!\nToplam puan: ${score}`);returnToMenu();}
-  else setTimeout(()=>startLevel(),1000);
+  alert(`🎉 Tebrikler! ${cardCount} kartı tamamladın.\nToplam Puan: ${score}`);
+  menu.style.display='flex';header.style.display='none';board.innerHTML='';
 }
-function showToastStars(n){
-  toast.textContent='⭐'.repeat(n);
-  toast.style.display='inline-flex';
-  setTimeout(()=>toast.style.display='none',1200);
-}
-function shuffle(arr){
-  let a=[...arr];
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
+function showToastStars(n){toast.textContent='⭐'.repeat(n);toast.style.display='inline-flex';setTimeout(()=>toast.style.display='none',1200);}
+function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-/* BALON ANİMASYONU */
-const bubbleCanvas=document.getElementById('bubbles');
-const bctx=bubbleCanvas.getContext('2d');
-let bubbles=[];
+/* Baloncuk animasyonu */
+const bubbleCanvas=document.getElementById('bubbles'),bctx=bubbleCanvas.getContext('2d');let bubbles=[];
 function resizeBubbles(){bubbleCanvas.width=window.innerWidth;bubbleCanvas.height=window.innerHeight;}
 window.addEventListener('resize',resizeBubbles);resizeBubbles();
 for(let i=0;i<48;i++){bubbles.push({x:Math.random()*bubbleCanvas.width,y:Math.random()*bubbleCanvas.height,r:Math.random()*10+6,s:Math.random()*0.6+0.25,a:Math.random()*0.5+0.25});}
-function drawBubbles(){
-  bctx.clearRect(0,0,bubbleCanvas.width,bubbleCanvas.height);
-  bubbles.forEach(b=>{
-    bctx.beginPath();bctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+function drawBubbles(){bctx.clearRect(0,0,bubbleCanvas.width,bubbleCanvas.height);
+  bubbles.forEach(b=>{bctx.beginPath();bctx.arc(b.x,b.y,b.r,0,Math.PI*2);
     bctx.fillStyle=`rgba(255,255,255,${b.a})`;bctx.fill();
-    b.y-=b.s;if(b.y+b.r<0){b.y=bubbleCanvas.height+b.r;b.x=Math.random()*bubbleCanvas.width;}
-  });
+    b.y-=b.s;if(b.y+b.r<0){b.y=bubbleCanvas.height+b.r;b.x=Math.random()*bubbleCanvas.width;}});
   requestAnimationFrame(drawBubbles);
 }
 drawBubbles();
 
-/* KONFETİ */
-const confettiCanvas=document.getElementById('confetti');
-const cctx=confettiCanvas.getContext('2d');
+/* Konfeti */
+const confettiCanvas=document.getElementById('confetti'),cctx=confettiCanvas.getContext('2d');
 function resizeConfetti(){confettiCanvas.width=window.innerWidth;confettiCanvas.height=window.innerHeight;}
 window.addEventListener('resize',resizeConfetti);resizeConfetti();
 function fireConfetti(ms=1000){
   confettiCanvas.style.display='block';
-  const confetti=[];
-  const colors=['#ff477e','#ffd166','#06d6a0','#118ab2','#ffe66d'];
+  const confetti=[],colors=['#ff477e','#ffd166','#06d6a0','#118ab2','#ffe66d'];
   for(let i=0;i<150;i++){confetti.push({x:Math.random()*confettiCanvas.width,y:-20,w:Math.random()*6+4,h:Math.random()*10+6,vy:Math.random()*2+2,vx:(Math.random()-0.5)*2,rot:Math.random()*360,vr:(Math.random()-0.5)*6,color:colors[Math.floor(Math.random()*colors.length)]});}
   const start=performance.now();
-  function tick(t){
-    cctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
-    confetti.forEach(p=>{
-      p.y+=p.vy;p.x+=p.vx;p.rot+=p.vr;
-      cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);
-      cctx.fillStyle=p.color;cctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cctx.restore();
-    });
-    if(t-start<ms)requestAnimationFrame(tick);else confettiCanvas.style.display='none';
-  }
+  function tick(t){cctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    confetti.forEach(p=>{p.y+=p.vy;p.x+=p.vx;p.rot+=p.vr;cctx.save();cctx.translate(p.x,p.y);cctx.rotate(p.rot*Math.PI/180);
+      cctx.fillStyle=p.color;cctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cctx.restore();});
+    if(t-start<ms)requestAnimationFrame(tick);else confettiCanvas.style.display='none';}
   requestAnimationFrame(tick);
 }
-
 setSound(true);
 </script>
 </body>
