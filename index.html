@@ -7,7 +7,6 @@
 <style>
   :root {
     --accent:#f77f00;
-    --bg-a:#ff6f61; --bg-b:#6a5acd; --bg-c:#00b4d8; --bg-d:#ffd166;
   }
   html,body {
     margin:0; padding:0; height:100%;
@@ -28,7 +27,7 @@
   #gradient { z-index: 0; }
   #shimmer { z-index: 1; opacity: 0.25; }
 
-  /* Menü & Overlay */
+  /* Menü */
   .overlay {
     position:fixed; inset:0; display:flex; flex-direction:column;
     justify-content:center; align-items:center; text-align:center;
@@ -208,42 +207,5 @@ function flipCard(card,src){
   }
 }
 
-/* 🌈 Arka Plan (Yumuşak Degrade + Yavaş Shimmer) */
-const gradientCanvas=document.getElementById('gradient');
-const gctx=gradientCanvas.getContext('2d');
-function resize(){gradientCanvas.width=innerWidth;gradientCanvas.height=innerHeight;}
-window.addEventListener('resize',resize);resize();
-let colors=[[255,111,97],[106,90,205],[0,180,216],[255,209,102]];
-let shift=0;
-function drawGrad(){
-  const w=gradientCanvas.width,h=gradientCanvas.height;
-  const grd=gctx.createLinearGradient(0,0,w,h);
-  colors.forEach((c,i)=>grd.addColorStop(i/(colors.length-1),`rgb(${c[0]},${c[1]},${c[2]})`));
-  gctx.fillStyle=grd;gctx.fillRect(0,0,w,h);
-  if(shift%200===0)colors.push(colors.shift());
-  shift++;
-  requestAnimationFrame(drawGrad);
-}
-drawGrad();
-
-const shimmerCanvas=document.getElementById('shimmer');
-const sctx=shimmerCanvas.getContext('2d');
-shimmerCanvas.width=innerWidth; shimmerCanvas.height=innerHeight;
-let shimmerX=-shimmerCanvas.width;
-function shimmer(){
-  sctx.clearRect(0,0,shimmerCanvas.width,shimmerCanvas.height);
-  let grd=sctx.createLinearGradient(shimmerX,0,shimmerX+shimmerCanvas.width/2,shimmerCanvas.height);
-  grd.addColorStop(0,'rgba(255,255,255,0)');
-  grd.addColorStop(0.5,'rgba(255,255,255,0.25)');
-  grd.addColorStop(1,'rgba(255,255,255,0)');
-  sctx.fillStyle=grd;
-  sctx.fillRect(0,0,shimmerCanvas.width,shimmerCanvas.height);
-  shimmerX+=0.5;
-  if(shimmerX>shimmerCanvas.width)shimmerX=-shimmerCanvas.width;
-  requestAnimationFrame(shimmer);
-}
-shimmer();
-</script>
-
-</body>
-</html>
+/* 🌈 Yumuşak degrade animasyonu */
+const gradientCanvas=document.getElementById
