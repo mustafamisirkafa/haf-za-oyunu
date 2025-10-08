@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🧠 Hafıza Eşleştirme — Responsive Deluxe v2</title>
+<title>🧠 Hafıza Eşleştirme — Otomatik Görsel Algılayan Deluxe</title>
 <style>
   :root {
     --accent:#f77f00;
@@ -137,7 +137,7 @@
 
 <section id="menu">
   <h1>🧠 Hafıza Eşleştirme</h1>
-  <p>Her seviyede ekranı tam doldurur · 41 resim</p>
+  <p>Resimler otomatik algılanır · 8 kartla başlar</p>
   <button class="menu-btn" id="playBtn">🎮 Oyuna Başla</button>
 </section>
 
@@ -163,13 +163,12 @@
 
 <script>
 const IMAGE_PATH = "./images/";
-const TOTAL_IMAGES = 41;
+let TOTAL_IMAGES = 0; // otomatik sayılacak
 const TOTAL_LEVELS = 10;
 const MATCH_SCORE = 10;
 const FAIL_PENALTY = 2;
 
 let level=1, score=0, flipped=[], matchedPairs=0, mistakes=0, soundOn=true, paused=false;
-
 const board=document.getElementById('board');
 const menu=document.getElementById('menu');
 const header=document.getElementById('header');
@@ -182,7 +181,6 @@ const pauseBtn=document.getElementById('pauseBtn');
 const resumeBtn=document.getElementById('resumeBtn');
 const newGameBtn=document.getElementById('newGameBtn');
 const quitBtn=document.getElementById('quitBtn');
-
 const flipSound=document.getElementById('flipSound');
 const matchSound=document.getElementById('matchSound');
 const levelUpSound=document.getElementById('levelUpSound');
@@ -201,7 +199,20 @@ function setSound(on){
 soundToggle.addEventListener('click',()=>setSound(!soundOn));
 document.body.addEventListener('click',()=>[flipSound,matchSound,levelUpSound].forEach(a=>{a.volume=0;a.play().catch(()=>{});setTimeout(()=>{a.pause();a.currentTime=0;a.volume=1;},50)}),{once:true});
 
-function startGame(){
+async function detectImages(){
+  // GitHub Pages veya yerel sunucuda images klasörünü taramak için fetch trick
+  try{
+    const res = await fetch(IMAGE_PATH);
+    const text = await res.text();
+    const matches = [...text.matchAll(/href="(\d+\.jpg)"/g)];
+    TOTAL_IMAGES = matches.length || 43; // fallback 43
+  }catch{
+    TOTAL_IMAGES = 43;
+  }
+}
+
+async function startGame(){
+  await detectImages();
   menu.style.display='none';
   header.style.display='flex';
   board.style.display='grid';
@@ -222,24 +233,19 @@ function startLevel(){
   levelEl.textContent=level;
   scoreEl.textContent=score;
   mistakes=0; flipped=[]; matchedPairs=0;
-
-  const pairCount = Math.min(3 + level, TOTAL_IMAGES/2); // 6 karttan başlar
-  const selected = pickUniqueRandomImages(pairCount);
-  const cards = shuffle([...selected, ...selected]);
-
-  // dinamik sütun sayısı
-  const colCount = cards.length <= 6 ? 3 :
-                   cards.length <= 12 ? 4 :
-                   cards.length <= 20 ? 5 : 6;
-  board.style.setProperty('--cols', colCount);
+  const pairCount=Math.min(4+level,TOTAL_IMAGES/2); // 8 karttan başlar
+  const selected=pickUniqueRandomImages(pairCount);
+  const cards=shuffle([...selected,...selected]);
+  const colCount=cards.length<=8?4:cards.length<=12?4:cards.length<=20?5:6;
+  board.style.setProperty('--cols',colCount);
   renderBoard(cards);
 }
 
 function pickUniqueRandomImages(count){
-  const available = Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
-  const out = [];
-  while(out.length<count && available.length>0){
-    const idx = Math.floor(Math.random()*available.length);
+  const available=Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
+  const out=[];
+  while(out.length<count&&available.length>0){
+    const idx=Math.floor(Math.random()*available.length);
     out.push(available.splice(idx,1)[0]);
   }
   return out;
@@ -277,7 +283,7 @@ function flipCard(card,src){
         matchedPairs++;
         score+=MATCH_SCORE;
         scoreEl.textContent=score;
-        if(matchedPairs===(Math.min(3 + level, TOTAL_IMAGES/2)))setTimeout(()=>levelComplete(),350);
+        if(matchedPairs===(Math.min(4+level,TOTAL_IMAGES/2)))setTimeout(()=>levelComplete(),350);
       },280);
     } else {
       mistakes++;
@@ -297,12 +303,8 @@ function levelComplete(){
   fireConfetti(1000);
   if(soundOn){levelUpSound.currentTime=0;levelUpSound.play().catch(()=>{});}
   level++;
-  if(level>TOTAL_LEVELS){
-    alert(`🎉 Oyun bitti!\nToplam puan: ${score}`);
-    returnToMenu();
-  } else {
-    setTimeout(()=>startLevel(),1000);
-  }
+  if(level>10){alert(`🎉 Oyun bitti!\nToplam puan: ${score}`);returnToMenu();}
+  else setTimeout(()=>startLevel(),1000);
 }
 
 function showToastStars(n){
@@ -320,30 +322,24 @@ function shuffle(arr){
   return a;
 }
 
-/* BALON ANİMASYONU */
+/* BALON & KONFETİ (öncekiyle aynı) */
 const bubbleCanvas=document.getElementById('bubbles');
 const bctx=bubbleCanvas.getContext('2d');
 let bubbles=[];
 function resizeBubbles(){bubbleCanvas.width=window.innerWidth;bubbleCanvas.height=window.innerHeight;}
 window.addEventListener('resize',resizeBubbles);resizeBubbles();
-for(let i=0;i<48;i++){
-  bubbles.push({x:Math.random()*bubbleCanvas.width,y:Math.random()*bubbleCanvas.height,r:Math.random()*10+6,s:Math.random()*0.6+0.25,a:Math.random()*0.5+0.25});
-}
+for(let i=0;i<48;i++){bubbles.push({x:Math.random()*bubbleCanvas.width,y:Math.random()*bubbleCanvas.height,r:Math.random()*10+6,s:Math.random()*0.6+0.25,a:Math.random()*0.5+0.25});}
 function drawBubbles(){
   bctx.clearRect(0,0,bubbleCanvas.width,bubbleCanvas.height);
   bubbles.forEach(b=>{
-    bctx.beginPath();
-    bctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    bctx.fillStyle=`rgba(255,255,255,${b.a})`;
-    bctx.fill();
-    b.y-=b.s;
-    if(b.y+b.r<0){b.y=bubbleCanvas.height+b.r;b.x=Math.random()*bubbleCanvas.width;}
+    bctx.beginPath();bctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    bctx.fillStyle=`rgba(255,255,255,${b.a})`;bctx.fill();
+    b.y-=b.s;if(b.y+b.r<0){b.y=bubbleCanvas.height+b.r;b.x=Math.random()*bubbleCanvas.width;}
   });
   requestAnimationFrame(drawBubbles);
 }
 drawBubbles();
 
-/* KONFETİ */
 const confettiCanvas=document.getElementById('confetti');
 const cctx=confettiCanvas.getContext('2d');
 function resizeConfetti(){confettiCanvas.width=window.innerWidth;confettiCanvas.height=window.innerHeight;}
@@ -352,9 +348,7 @@ function fireConfetti(ms=1000){
   confettiCanvas.style.display='block';
   const confetti=[];
   const colors=['#ff477e','#ffd166','#06d6a0','#118ab2','#ffe66d'];
-  for(let i=0;i<150;i++){
-    confetti.push({x:Math.random()*confettiCanvas.width,y:-20,w:Math.random()*6+4,h:Math.random()*10+6,vy:Math.random()*2+2,vx:(Math.random()-0.5)*2,rot:Math.random()*360,vr:(Math.random()-0.5)*6,color:colors[Math.floor(Math.random()*colors.length)]});
-  }
+  for(let i=0;i<150;i++){confetti.push({x:Math.random()*confettiCanvas.width,y:-20,w:Math.random()*6+4,h:Math.random()*10+6,vy:Math.random()*2+2,vx:(Math.random()-0.5)*2,rot:Math.random()*360,vr:(Math.random()-0.5)*6,color:colors[Math.floor(Math.random()*colors.length)]});}
   const start=performance.now();
   function tick(t){
     cctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
