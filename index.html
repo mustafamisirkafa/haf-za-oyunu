@@ -15,7 +15,7 @@
     overflow:hidden;
   }
 
-  /* 🧠 Menü & Overlay */
+  /* Menü & Overlay */
   .overlay {
     position:fixed; inset:0; display:flex; flex-direction:column;
     justify-content:center; align-items:center; text-align:center;
@@ -91,18 +91,6 @@
     100%{ transform: scale(1); box-shadow:none}
   }
 
-  /* 🎉 Kutlama */
-  #celebration {
-    position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-    font-size:28px; background:rgba(0,0,0,.6); z-index:10;
-  }
-
-  /* 🎊 Konfeti Canvas */
-  #confettiCanvas {
-    position:fixed; inset:0; pointer-events:none; z-index:11; display:none;
-  }
-
-  /* 🌈 Katmanlı Arka Plan */
   #gradient, #bubbles, #shimmer {
     position: fixed;
     inset: 0;
@@ -127,7 +115,6 @@
 <section id="menu" class="overlay show">
   <h1>🧠 Hafıza Oyunu Deluxe</h1>
   <button class="menu-btn" id="startBtn">🎮 Oyuna Başla</button>
-  <button class="menu-btn" id="showLeaderboardBtn">🏆 Lider Tablosu</button>
 </section>
 
 <!-- 🕹 Oyun üst bar -->
@@ -135,83 +122,107 @@
   <div class="badge">Seviye: <span id="levelDisplay">1</span></div>
   <div class="badge">Puan: <span id="scoreDisplay">0</span></div>
   <button class="pause-btn" id="pauseBtn">⏸ Durdur</button>
-  <button class="sound-btn" id="soundToggle">🔊 Ses: Açık</button>
 </header>
 
 <!-- 🧠 Oyun alanı -->
 <main id="board"></main>
 
-<!-- 🛑 Duraklatma menüsü -->
-<section id="pauseMenu" class="overlay">
-  <h2>⏸ Oyun Durdu</h2>
-  <button class="menu-btn" id="resumeBtn">▶ Devam Et</button>
-  <button class="menu-btn" id="restartBtn">🔄 Yeni Oyun</button>
-  <button class="menu-btn" id="exitBtn">🚪 Çık</button>
-</section>
-
-<!-- 🏆 Lider tablosu popup -->
-<section id="leaderboardPopup" class="overlay">
-  <h2>🏆 Lider Tablosu</h2>
-  <ol id="leaderList"></ol>
-  <button class="menu-btn" id="closeLeaderboard">Kapat</button>
-</section>
-
-<!-- 🎉 Kutlama -->
-<div id="celebration">🎉 Tebrikler! İlk 5'e girdiniz! 🏅</div>
-
-<!-- 🎊 Konfeti Canvas -->
-<canvas id="confettiCanvas"></canvas>
-
 <!-- 🔊 Sesler -->
 <audio id="flipSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
 <audio id="matchSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3"></audio>
-<audio id="levelUpSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3"></audio>
 
 <script>
-/* 🌈 Alt Katman - Degrade Akışı */
-const gradientCanvas = document.getElementById('gradient');
-const gctx = gradientCanvas.getContext('2d');
-function resizeGradient(){ gradientCanvas.width=innerWidth; gradientCanvas.height=innerHeight; }
-window.addEventListener('resize',resizeGradient); resizeGradient();
-let gradColors=[[255,111,97],[106,90,205],[0,180,216],[255,209,102]]; let t=0;
-function drawGradient(){
-  let w=gradientCanvas.width,h=gradientCanvas.height;
-  let grd=gctx.createLinearGradient(0,0,w,h);
-  for(let i=0;i<gradColors.length;i++){ let c=gradColors[i]; grd.addColorStop(i/(gradColors.length-1),`rgb(${c[0]},${c[1]},${c[2]})`);}
-  gctx.fillStyle=grd; gctx.fillRect(0,0,w,h);
-  if(t%3===0) gradColors.push(gradColors.shift()); t++;
-  requestAnimationFrame(drawGradient);
-}
-drawGradient();
+const IMAGE_PATH = "./images/";
+const TOTAL_IMAGES = 12;
+const TOTAL_LEVELS = 5;
+const MATCH_SCORE = 10;
+const FAIL_PENALTY = 2;
 
-/* 🫧 Orta Katman - Baloncuklar */
-const bubbleCanvas=document.getElementById('bubbles');
-const bctx=bubbleCanvas.getContext('2d');
-function resizeBubbles(){bubbleCanvas.width=innerWidth;bubbleCanvas.height=innerHeight;}
-window.addEventListener('resize',resizeBubbles);resizeBubbles();
-const bubbles=Array.from({length:40},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*10+4,s:Math.random()*0.6+0.2,a:Math.random()*0.4+0.2}));
-function drawBubbles(){
-  bctx.clearRect(0,0,bubbleCanvas.width,bubbleCanvas.height);
-  bubbles.forEach(b=>{
-    bctx.beginPath();bctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    bctx.fillStyle=`rgba(255,255,255,${b.a})`;bctx.fill();
-    b.y-=b.s;if(b.y+b.r<0){b.y=bubbleCanvas.height+b.r;b.x=Math.random()*bubbleCanvas.width;}
+let level=1, score=0, flipped=[], matchedPairs=0;
+const board = document.getElementById('board');
+const levelEl = document.getElementById('levelDisplay');
+const scoreEl = document.getElementById('scoreDisplay');
+
+document.getElementById('startBtn').onclick = startGame;
+
+function startGame(){
+  document.getElementById('menu').classList.remove('show');
+  document.getElementById('header').style.display='flex';
+  board.style.display='grid';
+  level=1; score=0;
+  nextLevel();
+}
+
+function nextLevel(){
+  board.innerHTML='';
+  flipped=[]; matchedPairs=0;
+  levelEl.textContent=level;
+  scoreEl.textContent=score;
+  const pairCount = level+1;
+  const selected = pickImages(pairCount);
+  const cards = shuffle([...selected,...selected]);
+  cards.forEach(src=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div class="inner">
+        <div class="front"><img src="${src}"></div>
+        <div class="back"></div>
+      </div>`;
+    card.addEventListener('click',()=>flipCard(card,src));
+    board.appendChild(card);
   });
-  requestAnimationFrame(drawBubbles);
 }
-drawBubbles();
 
-/* ✨ Shimmer Katmanı */
-const shimmerCanvas=document.getElementById('shimmer');const sctx=shimmerCanvas.getContext('2d');
-function resizeShimmer(){shimmerCanvas.width=innerWidth;shimmerCanvas.height=innerHeight;}
-window.addEventListener('resize',resizeShimmer);resizeShimmer();
-let shimmerX=-shimmerCanvas.width;
-function drawShimmer(){
-  sctx.clearRect(0,0,shimmerCanvas.width,shimmerCanvas.height);
-  let grd=sctx.createLinearGradient(shimmerX,0,shimmerX+shimmerCanvas.width/2,shimmerCanvas.height);
-  grd.addColorStop(0,'rgba(255,255,255,0)');
-  grd.addColorStop(0.5,'rgba(255,255,255,0.25)');
-  grd.addColorStop(1,'rgba(255,255,255,0)');
-  sctx.fillStyle=grd;sctx.fillRect(0,0,shimmerCanvas.width,shimmerCanvas.height);
-  shimmerX+=0.8;if(shimmerX>shimmerCanvas.width)shimmerX=-shimmerCanvas.width;
-  reques
+function pickImages(count){
+  const all = Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
+  const chosen=[];
+  while(chosen.length<count){
+    const idx=Math.floor(Math.random()*all.length);
+    chosen.push(all.splice(idx,1)[0]);
+  }
+  return chosen;
+}
+
+function flipCard(card,src){
+  if(card.classList.contains('flipped')||flipped.length===2) return;
+  card.classList.add('flipped');
+  flipped.push({card,src});
+  if(flipped.length===2){
+    const[a,b]=flipped;
+    if(a.src===b.src){
+      setTimeout(()=>{
+        a.card.classList.add('matched');
+        b.card.classList.add('matched');
+        flipped=[];
+        matchedPairs++;
+        score+=MATCH_SCORE;
+        scoreEl.textContent=score;
+        if(matchedPairs===level+1){
+          level++;
+          if(level>TOTAL_LEVELS){ alert(`Oyun bitti! Puan: ${score}`); }
+          else setTimeout(nextLevel,800);
+        }
+      },250);
+    } else {
+      setTimeout(()=>{
+        a.card.classList.remove('flipped');
+        b.card.classList.remove('flipped');
+        flipped=[];
+        score=Math.max(0,score-FAIL_PENALTY);
+        scoreEl.textContent=score;
+      },700);
+    }
+  }
+}
+
+/* 🌈 Arka Plan Katmanları */
+const gradientCanvas=document.getElementById('gradient');const gctx=gradientCanvas.getContext('2d');
+function resizeGradient(){gradientCanvas.width=innerWidth;gradientCanvas.height=innerHeight;}
+window.addEventListener('resize',resizeGradient);resizeGradient();
+let gradColors=[[255,111,97],[106,90,205],[0,180,216],[255,209,102]];let t=0;
+function drawGradient(){let w=gradientCanvas.width,h=gradientCanvas.height;let grd=gctx.createLinearGradient(0,0,w,h);for(let i=0;i<gradColors.length;i++){let c=gradColors[i];grd.addColorStop(i/(gradColors.length-1),`rgb(${c[0]},${c[1]},${c[2]})`);}gctx.fillStyle=grd;gctx.fillRect(0,0,w,h);if(t%3===0)gradColors.push(gradColors.shift());t++;requestAnimationFrame(drawGradient);}drawGradient();
+</script>
+
+</body>
+</html>
