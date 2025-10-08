@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🧠 Hafıza Eşleştirme — +2 Çift Artan Deluxe</title>
+<title>🧠 Hafıza Eşleştirme — Deluxe</title>
 <style>
   :root {
     --accent:#f77f00;
@@ -25,12 +25,10 @@
     50% { background-position: 100% 50% }
     100% { background-position: 0% 50% }
   }
-
   canvas#bubbles {
     position:fixed; inset:0; width:100%; height:100%;
     z-index:-1; pointer-events:none; opacity:.6;
   }
-
   #menu {
     position:fixed; inset:0; display:flex; flex-direction:column; gap:14px;
     justify-content:center; align-items:center; text-align:center;
@@ -41,7 +39,6 @@
     padding:12px 22px; border-radius:12px; font-size:18px; width:220px;
     box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
-
   #header {
     position:sticky; top:0; z-index:4; display:none;
     background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
@@ -57,7 +54,6 @@
     background:#ffffff22; border:1px solid #ffffff33; color:#fff;
     padding:6px 10px; border-radius:999px; cursor:pointer; font-size:14px;
   }
-
   #board {
     display:none;
     grid-template-columns: repeat(var(--cols), 1fr);
@@ -67,7 +63,6 @@
     height: calc(100dvh - 80px);
     overflow:hidden;
   }
-
   .card {
     width: calc((100vmin - 60px) / var(--cols));
     height: calc((100vmin - 60px) / var(--cols));
@@ -78,7 +73,6 @@
     perspective:900px;
     box-shadow:0 6px 18px rgba(0,0,0,.25);
     background:#000;
-    transition: transform 0.2s ease;
   }
   .inner {
     width:100%; height:100%; transform-style:preserve-3d;
@@ -97,7 +91,6 @@
       repeating-linear-gradient(-45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px);
     background-size:20px 20px; border:2px solid #fff;
   }
-
   .matched {
     pointer-events:none;
     border:3px solid #32d74b;
@@ -109,20 +102,17 @@
     40%{ transform: scale(1.25); box-shadow:0 0 18px #32d74b}
     100%{ transform: scale(1); box-shadow:none}
   }
-
   #toast {
     position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
     background:#00000070; backdrop-filter: blur(4px);
     padding:10px 14px; border-radius:999px; display:none; gap:8px; align-items:center; z-index:6;
     border:1px solid #ffffff2e;
   }
-
   #pauseMenu {
     position:fixed; inset:0; display:none; flex-direction:column; gap:14px;
     justify-content:center; align-items:center; text-align:center;
     background:rgba(0,0,0,.65); backdrop-filter: blur(8px); z-index:7;
   }
-
   canvas#confetti { position:fixed; inset:0; pointer-events:none; z-index:9; display:none; }
 </style>
 </head>
@@ -159,7 +149,7 @@
 
 <script>
 const IMAGE_PATH = "./images/";
-let TOTAL_IMAGES = 0;
+const TOTAL_IMAGES = 43; // 🔥 sabit sayıda resim
 const TOTAL_LEVELS = 10;
 const MATCH_SCORE = 10;
 const FAIL_PENALTY = 2;
@@ -182,8 +172,8 @@ const matchSound=document.getElementById('matchSound');
 const levelUpSound=document.getElementById('levelUpSound');
 
 document.getElementById('playBtn').addEventListener('click',startGame);
-pauseBtn.addEventListener('click',pauseGame);
-resumeBtn.addEventListener('click',resumeGame);
+pauseBtn.addEventListener('click',()=>{paused=true;pauseMenu.style.display='flex';});
+resumeBtn.addEventListener('click',()=>{paused=false;pauseMenu.style.display='none';});
 newGameBtn.addEventListener('click',()=>{pauseMenu.style.display='none';startGame();});
 quitBtn.addEventListener('click',()=>{pauseMenu.style.display='none';returnToMenu();});
 
@@ -195,19 +185,7 @@ function setSound(on){
 soundToggle.addEventListener('click',()=>setSound(!soundOn));
 document.body.addEventListener('click',()=>[flipSound,matchSound,levelUpSound].forEach(a=>{a.volume=0;a.play().catch(()=>{});setTimeout(()=>{a.pause();a.currentTime=0;a.volume=1;},50)}),{once:true});
 
-async function detectImages(){
-  try{
-    const res = await fetch(IMAGE_PATH);
-    const text = await res.text();
-    const matches = [...text.matchAll(/href="(\d+\.jpg)"/g)];
-    TOTAL_IMAGES = matches.length || 43;
-  }catch{
-    TOTAL_IMAGES = 43;
-  }
-}
-
-async function startGame(){
-  await detectImages();
+function startGame(){
   menu.style.display='none';
   header.style.display='flex';
   board.style.display='grid';
@@ -221,15 +199,11 @@ function returnToMenu(){
   menu.style.display='flex';
 }
 
-function pauseGame(){ paused=true; pauseMenu.style.display='flex'; }
-function resumeGame(){ paused=false; pauseMenu.style.display='none'; }
-
 function startLevel(){
   levelEl.textContent=level;
   scoreEl.textContent=score;
   mistakes=0; flipped=[]; matchedPairs=0;
-
-  const pairCount=Math.min(6 + (level-1)*2, TOTAL_IMAGES/2); // 🔥 her seviye +2 çift
+  const pairCount=Math.min(6+(level-1)*2,TOTAL_IMAGES/2);
   const selected=pickUniqueRandomImages(pairCount);
   const cards=shuffle([...selected,...selected]);
   const colCount=cards.length<=12?4:cards.length<=20?5:6;
