@@ -9,19 +9,67 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      overflow-x: hidden;
+      overflow: hidden;
       font-family: Arial, sans-serif;
-      background: #1a1a1a;
       color: white;
     }
 
-    canvas#particles {
+    /* 🌈 Hareketli degrade arka plan */
+    body {
+      background: linear-gradient(270deg, #ff6f61, #6a5acd, #00b4d8, #ffd166);
+      background-size: 800% 800%;
+      animation: gradientFlow 25s ease infinite;
+    }
+
+    @keyframes gradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 🫧 Baloncuk katmanı */
+    canvas#bubbles {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       z-index: -1;
+      pointer-events: none;
+    }
+
+    /* 🏠 Ana Menü */
+    #menu {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      z-index: 5;
+    }
+
+    #menu h1 {
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .menu-btn {
+      background: #f77f00;
+      color: white;
+      padding: 12px 20px;
+      margin: 8px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 200px;
     }
 
     #header {
@@ -31,18 +79,12 @@
       position: sticky;
       top: 0;
       z-index: 5;
-      backdrop-filter: blur(6px);
-    }
-
-    h1 {
-      margin: 5px 0;
-      font-size: 22px;
+      display: none;
     }
 
     #levelDisplay, #scoreDisplay {
       display: inline-block;
       background: #f77f00;
-      color: white;
       padding: 5px 10px;
       border-radius: 6px;
       font-size: 16px;
@@ -50,11 +92,13 @@
     }
 
     #board {
-      display: grid;
+      display: none;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       padding: 10px;
       justify-items: center;
+      overflow-y: auto;
+      height: calc(100vh - 70px);
     }
 
     .card {
@@ -75,9 +119,7 @@
       position: relative;
     }
 
-    .flipped .inner {
-      transform: rotateY(180deg);
-    }
+    .flipped .inner { transform: rotateY(180deg); }
 
     .front, .back {
       position: absolute;
@@ -120,72 +162,42 @@
       100% { transform: scale(1); box-shadow: none; }
     }
 
-    /* 🏆 Popup Leaderboard */
-    #leaderboardPopup {
-      display: none;
+    #backToMenu {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(5px);
-      z-index: 10;
-      justify-content: center;
-      align-items: center;
-    }
-
-    #leaderboardBox {
-      background: #222;
-      padding: 20px;
-      border-radius: 10px;
-      max-width: 300px;
-      width: 80%;
-      text-align: center;
-      box-shadow: 0 0 15px #f77f00;
-    }
-
-    #leaderboardBox h2 {
-      margin-top: 0;
-      color: #f77f00;
-    }
-
-    #leaderboardBox ol {
-      text-align: left;
-      padding-left: 20px;
-    }
-
-    #closePopup {
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #f77f00;
       color: white;
       border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
-      margin-top: 10px;
+      display: none;
     }
+
   </style>
 </head>
 <body>
 
-<canvas id="particles"></canvas>
+<canvas id="bubbles"></canvas>
+
+<!-- 🏠 Ana Menü -->
+<div id="menu">
+  <h1>🧠 Hafıza Eşleştirme Oyunu</h1>
+  <button class="menu-btn" onclick="startGame()">🎮 Oyuna Başla</button>
+  <button class="menu-btn" onclick="showLeaderboard()">🏆 Rekorlar</button>
+</div>
 
 <div id="header">
-  <h1>🧠 Hafıza Eşleştirme Oyunu</h1>
   <div id="levelDisplay">Seviye: 1</div>
   <div id="scoreDisplay">Puan: 0</div>
 </div>
 
 <div id="board"></div>
 
-<!-- 🏆 Popup Leaderboard -->
-<div id="leaderboardPopup">
-  <div id="leaderboardBox">
-    <h2>🏆 Yeni Rekor!</h2>
-    <ol id="leaderList"></ol>
-    <button id="closePopup">Kapat</button>
-  </div>
-</div>
+<button id="backToMenu" onclick="returnToMenu()">↩ Ana Menü</button>
 
 <audio id="flipSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
 <audio id="matchSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3"></audio>
@@ -194,14 +206,20 @@
 const IMAGE_PATH = "./images/";
 const TOTAL_IMAGES = 41;
 const TOTAL_LEVELS = 10;
-
-let level = 1;
-let flippedCards = [];
-let matchedPairs = 0;
-let score = 0;
+let level = 1, score = 0, flippedCards = [], matchedPairs = 0;
 
 const flipSound = document.getElementById('flipSound');
 const matchSound = document.getElementById('matchSound');
+
+function startGame() {
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('header').style.display = 'block';
+  document.getElementById('board').style.display = 'grid';
+  document.getElementById('backToMenu').style.display = 'block';
+  level = 1;
+  score = 0;
+  startLevel();
+}
 
 function startLevel() {
   document.getElementById('levelDisplay').textContent = `Seviye: ${level}`;
@@ -282,13 +300,18 @@ function updateScore() {
 function nextLevel() {
   level++;
   if (level > TOTAL_LEVELS) {
-    const brokeRecord = saveScore();
-    if (brokeRecord) showLeaderboardPopup();
-    alert("🎉 Tüm seviyeleri bitirdin!");
-    level = 1;
-    score = 0;
+    alert(`🎉 Oyun bitti! Toplam puan: ${score}`);
+    returnToMenu();
+  } else {
+    startLevel();
   }
-  startLevel();
+}
+
+function returnToMenu() {
+  document.getElementById('menu').style.display = 'flex';
+  document.getElementById('header').style.display = 'none';
+  document.getElementById('board').style.display = 'none';
+  document.getElementById('backToMenu').style.display = 'none';
 }
 
 function shuffle(array) {
@@ -300,34 +323,10 @@ function shuffle(array) {
   return arr;
 }
 
-/* 🏆 Leaderboard */
-function saveScore() {
-  let scores = JSON.parse(localStorage.getItem('leaderboard') || "[]");
-  const name = prompt("İsmini gir 📝") || "Oyuncu";
-  scores.push({name, score});
-  scores.sort((a,b) => b.score - a.score);
-  const brokeRecord = scores.findIndex(s => s.name === name && s.score === score) < 5;
-  scores = scores.slice(0, 5);
-  localStorage.setItem('leaderboard', JSON.stringify(scores));
-  return brokeRecord;
-}
-
-function showLeaderboardPopup() {
-  const popup = document.getElementById('leaderboardPopup');
-  const list = document.getElementById('leaderList');
-  const scores = JSON.parse(localStorage.getItem('leaderboard') || "[]");
-  list.innerHTML = scores.map(s => `<li>${s.name}: ${s.score} puan</li>`).join('');
-  popup.style.display = 'flex';
-}
-
-document.getElementById('closePopup').addEventListener('click', () => {
-  document.getElementById('leaderboardPopup').style.display = 'none';
-});
-
-/* 🎇 Partikül Arka Plan */
-const canvas = document.getElementById('particles');
+/* 🫧 Baloncuk animasyonu */
+const canvas = document.getElementById('bubbles');
 const ctx = canvas.getContext('2d');
-let particles = [];
+let bubbles = [];
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
@@ -336,33 +335,32 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-for (let i = 0; i < 80; i++) {
-  particles.push({
+for (let i = 0; i < 50; i++) {
+  bubbles.push({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    r: Math.random() * 2 + 1,
-    dx: (Math.random() - 0.5) * 0.5,
-    dy: (Math.random() - 0.5) * 0.5
+    r: Math.random() * 10 + 5,
+    speed: Math.random() * 0.5 + 0.3,
+    opacity: Math.random() * 0.5 + 0.3
   });
 }
 
-function drawParticles() {
+function drawBubbles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  particles.forEach(p => {
+  bubbles.forEach(b => {
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(255,255,255,${b.opacity})`;
     ctx.fill();
-    p.x += p.dx;
-    p.y += p.dy;
-    if (p.x < 0 || p.x > canvas.width) p.dx *= -1;
-    if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+    b.y -= b.speed;
+    if (b.y + b.r < 0) {
+      b.y = canvas.height + b.r;
+      b.x = Math.random() * canvas.width;
+    }
   });
-  requestAnimationFrame(drawParticles);
+  requestAnimationFrame(drawBubbles);
 }
-drawParticles();
-
-startLevel();
+drawBubbles();
 </script>
 
 </body>
