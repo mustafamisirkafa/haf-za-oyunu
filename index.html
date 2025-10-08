@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🧠 Hafıza Eşleştirme — Candy Crush Light</title>
+<title>🧠 Hafıza Eşleştirme — Gelişmiş Versiyon</title>
 <style>
   :root {
     --accent:#f77f00;
@@ -29,7 +29,6 @@
     z-index:-1; pointer-events:none; opacity:.6;
   }
 
-  /* Menü */
   #menu {
     position:fixed; inset:0; display:flex; flex-direction:column; gap:14px;
     justify-content:center; align-items:center; text-align:center;
@@ -41,7 +40,6 @@
     box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
 
-  /* Üst bar */
   #header {
     position:sticky; top:0; z-index:4; display:none;
     background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
@@ -58,15 +56,13 @@
     padding:6px 10px; border-radius:999px; cursor:pointer; font-size:14px;
   }
 
-  /* Oyun alanı */
   #board {
     display:none;
-    grid-template-columns: repeat(3, 1fr);
     gap:10px; padding:12px; justify-items:center;
     height: calc(100dvh - 70px); overflow-y:auto;
   }
   .card {
-    width:30vw; max-width:120px; aspect-ratio:1/1;
+    width:18vw; max-width:120px; aspect-ratio:1/1;
     border-radius:14px; overflow:hidden; cursor:pointer; perspective:900px;
     box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
@@ -88,7 +84,6 @@
     background-size:20px 20px; border:2px solid #fff;
   }
 
-  /* Eşleşme efekti */
   .matched {
     pointer-events:none;
     border:3px solid #32d74b;
@@ -108,7 +103,6 @@
     border:1px solid #ffffff2e;
   }
 
-  /* Durdurma Menüsü */
   #pauseMenu {
     position:fixed; inset:0; display:none; flex-direction:column; gap:14px;
     justify-content:center; align-items:center; text-align:center;
@@ -125,7 +119,7 @@
 
 <section id="menu">
   <h1>🧠 Hafıza Eşleştirme</h1>
-  <p>10 seviye · 41 resim · animasyonlar</p>
+  <p>10 seviye · 41 resim · 6 kartla başlar</p>
   <button class="menu-btn" id="playBtn">🎮 Oyuna Başla</button>
 </section>
 
@@ -140,14 +134,12 @@
 
 <div id="toast">⭐️⭐️⭐️</div>
 
-<!-- Durdurma Menüsü -->
 <div id="pauseMenu">
   <button class="menu-btn" id="resumeBtn">▶️ Devam Et</button>
   <button class="menu-btn" id="newGameBtn">🔄 Yeni Oyun</button>
   <button class="menu-btn" id="quitBtn">🏠 Ana Menü</button>
 </div>
 
-<!-- Sesler -->
 <audio id="flipSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
 <audio id="matchSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3"></audio>
 <audio id="levelUpSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3"></audio>
@@ -220,7 +212,7 @@ function startLevel(){
   levelEl.textContent=level;
   scoreEl.textContent=score;
   mistakes=0; flipped=[]; matchedPairs=0;
-  const pairCount=level+1;
+  const pairCount=Math.min(3 + level, TOTAL_IMAGES/2); // 🧩 Başlangıçta 3 çift (6 kart)
   const selected=pickUniqueRandomImages(pairCount);
   const cards=shuffle([...selected,...selected]);
   renderBoard(cards);
@@ -238,6 +230,10 @@ function pickUniqueRandomImages(count){
 
 function renderBoard(cards){
   board.innerHTML='';
+  const colCount = cards.length <= 6 ? 3 :
+                   cards.length <= 12 ? 4 :
+                   cards.length <= 20 ? 5 : 6;
+  board.style.gridTemplateColumns=`repeat(${colCount},1fr)`;
   cards.forEach(src=>{
     const card=document.createElement('div');
     card.className='card';
@@ -268,7 +264,7 @@ function flipCard(card,src){
         matchedPairs++;
         score+=MATCH_SCORE;
         scoreEl.textContent=score;
-        if(matchedPairs===(level+1))setTimeout(()=>levelComplete(),350);
+        if(matchedPairs===(Math.min(3 + level, TOTAL_IMAGES/2)))setTimeout(()=>levelComplete(),350);
       },280);
     } else {
       mistakes++;
@@ -278,7 +274,7 @@ function flipCard(card,src){
         a.card.classList.remove('flipped');
         b.card.classList.remove('flipped');
         flipped=[];
-      },2000); // 📌 burada bekleme süresi 2000ms
+      },2000);
     }
   }
 }
