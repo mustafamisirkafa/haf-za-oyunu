@@ -1,64 +1,141 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>✨ Üst Katman Testi</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>🧠 Hafıza Eşleştirme — Deluxe Edition</title>
 <style>
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    background: linear-gradient(270deg,#ff6f61,#6a5acd,#00b4d8,#ffd166);
+  :root {
+    --accent:#f77f00;
+    --bg-a:#ff6f61; --bg-b:#6a5acd; --bg-c:#00b4d8; --bg-d:#ffd166;
+  }
+  html,body {
+    margin:0; padding:0; height:100%;
+    font-family: Arial, Helvetica, sans-serif; color:#fff;
+    overflow:hidden;
+    background:#111;
+  }
+  /* 🌈 Alt katman - hareketli degrade */
+  body {
+    background: linear-gradient(270deg,var(--bg-a),var(--bg-b),var(--bg-c),var(--bg-d));
     background-size: 800% 800%;
     animation: gradientFlow 24s ease infinite;
-    overflow: hidden;
   }
   @keyframes gradientFlow {
     0%{background-position:0% 50%}
     50%{background-position:100% 50%}
     100%{background-position:0% 50%}
   }
-  canvas {
+  /* 🫧 Orta katman - baloncuklar */
+  #bubbles, #shimmer {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 2; /* orta katmanın üstünde olacak */
+  }
+  #bubbles { z-index: 0; opacity: .5; }
+  #shimmer { z-index: 1; opacity: .5; }
+  /* Menü */
+  #menu {
+    position:fixed; inset:0; display:flex; flex-direction:column; gap:14px;
+    justify-content:center; align-items:center; text-align:center;
+    background:rgba(0,0,0,.45); backdrop-filter: blur(8px); z-index:5;
+  }
+  #menu h1{margin:0 0 6px 0; font-size:28px}
+  .menu-btn {
+    background:var(--accent); color:#fff; border:none; cursor:pointer;
+    padding:12px 22px; border-radius:12px; font-size:18px; width:220px;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+  }
+  /* Üst bar */
+  #header {
+    position:sticky; top:0; z-index:4; display:none;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
+    padding:10px; display:flex; gap:10px; align-items:center; justify-content:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  .badge {
+    display:inline-flex; align-items:center; gap:8px;
+    background:#00000066; border:1px solid #ffffff29;
+    padding:6px 10px; border-radius:999px; font-weight:700; font-size:14px;
+  }
+  .sound-btn {
+    margin-left:8px; background:#ffffff22; border:1px solid #ffffff33; color:#fff;
+    padding:6px 10px; border-radius:999px; cursor:pointer; font-size:14px;
+  }
+  /* Oyun alanı */
+  #board {
+    display:none;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px; padding:12px; justify-items:center;
+    height: calc(100dvh - 70px); overflow-y:auto;
+  }
+  .card {
+    width:30vw; max-width:120px; aspect-ratio:1/1;
+    border-radius:14px; overflow:hidden; cursor:pointer; perspective:900px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+  }
+  .inner {
+    width:100%; height:100%; transform-style:preserve-3d;
+    transition: transform .38s cubic-bezier(.2,.8,.2,1), filter .2s;
+  }
+  .flipped .inner { transform: rotateY(180deg); }
+  .front,.back {
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:14px;
+  }
+  .front { transform: rotateY(180deg);}
+  .front img { width:100%; height:100%; object-fit:cover; }
+  .back {
+    background-color:#d62828;
+    background-image:
+      repeating-linear-gradient(45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px),
+      repeating-linear-gradient(-45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px);
+    background-size:20px 20px; border:2px solid #fff;
+  }
+  .matched {
+    pointer-events:none; border:3px solid #32d74b; filter:brightness(1.2);
+    animation: zoomFlash .6s ease both;
+  }
+  @keyframes zoomFlash {
+    0%{ transform: scale(1)}
+    40%{ transform: scale(1.25); box-shadow:0 0 18px #32d74b}
+    100%{ transform: scale(1); box-shadow:none}
   }
 </style>
 </head>
 <body>
 
+<canvas id="bubbles"></canvas>
 <canvas id="shimmer"></canvas>
 
+<!-- Menü -->
+<section id="menu">
+  <h1>🧠 Hafıza Eşleştirme</h1>
+  <p>10 seviye · canlı fon · sesli efektler</p>
+  <button class="menu-btn" id="playBtn">🎮 Oyuna Başla</button>
+</section>
+
+<!-- Üst Bilgi -->
+<header id="header">
+  <div class="badge">Seviye: <span id="levelDisplay">1</span></div>
+  <div class="badge">Puan: <span id="scoreDisplay">0</span></div>
+  <button class="sound-btn" id="soundToggle">🔊 Ses: Açık</button>
+</header>
+
+<!-- Oyun Alanı -->
+<main id="board"></main>
+
+<!-- Sesler -->
+<audio id="flipSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
+<audio id="matchSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3"></audio>
+<audio id="levelUpSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3"></audio>
+
 <script>
-const canvas = document.getElementById('shimmer');
-const ctx = canvas.getContext('2d');
+const IMAGE_PATH = "./images/";
+const TOTAL_IMAGES = 41;
+const TOTAL_LEVELS = 10;
+const MATCH_SCORE = 10;
+const FAIL_PENALTY = 2;
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-let tick = 0;
-function draw() {
-  tick += 0.005;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  for (let i = 0; i < 3; i++) {
-    const y = (canvas.height / 3) * i + Math.sin(tick + i) * 40;
-    const grad = ctx.createLinearGradient(0, y, canvas.width, y+100);
-    grad.addColorStop(0, 'rgba(255,255,255,0)');
-    grad.addColorStop(0.5, 'rgba(255,255,255,0.15)');
-    grad.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, y, canvas.width, 120);
-  }
-
-  requestAnimationFrame(draw);
-}
-draw();
-</script>
-
-</body>
-</html>
+let level = 1, score = 0, flipped = [], matchedPairs = 0, mistakes = 0, soundOn = true;
+const board = document.getElementById('board');
+const levelEl = docume
