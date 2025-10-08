@@ -3,212 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🧠 Hafıza Oyunu — Efektli</title>
+<title>Layered Pro Background</title>
 <style>
   html,body {
-    margin:0; padding:0;
-    height:100%;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #ff7b00, #ff0099, #6a5acd, #00b4d8);
-    background-size: 400% 400%;
-    animation: bgflow 20s ease infinite;
-    overflow-x:hidden;
-  }
-  @keyframes bgflow {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:0% 50%}
+    margin: 0; padding: 0; height: 100%; overflow: hidden;
   }
 
-  h1 {
-    text-align:center;
-    color:#fff;
-    margin:15px 0;
-    text-shadow: 0 0 10px #000;
-  }
-
-  #board {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    justify-items: center;
-    padding: 12px;
-    max-width: 420px;
-    margin: 0 auto;
-    box-sizing: border-box;
-  }
-
-  .card {
-    width: 30vw;
-    max-width: 110px;
-    aspect-ratio: 1/1;
-    perspective: 800px;
-    cursor: pointer;
-    position: relative;
-  }
-
-  .inner {
-    width: 100%;
-    height: 100%;
-    transform-style: preserve-3d;
-    transition: transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .3s;
-    border-radius: 14px;
-    box-shadow: 0 4px 10px rgba(0,0,0,.3);
-  }
-
-  .card:hover .inner {
-    transform: scale(1.05);
-  }
-
-  .flipped .inner {
-    transform: rotateY(180deg) scale(1.05);
-    box-shadow: 0 0 16px 4px #fff5;
-  }
-
-  .front, .back {
-    position: absolute;
-    inset: 0;
-    backface-visibility: hidden;
-    border-radius: 14px;
-    overflow: hidden;
-  }
-
-  .front {
-    transform: rotateY(180deg);
-  }
-
-  .front img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .back {
-    background-color: #d62828;
-    background-image:
-      repeating-linear-gradient(45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px),
-      repeating-linear-gradient(-45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px);
-    background-size: 20px 20px;
-    border: 2px solid #fff;
-  }
-
-  .matched .inner {
-    animation: matchedPulse 0.7s ease both;
-    box-shadow: 0 0 16px 6px #32d74b;
-  }
-
-  @keyframes matchedPulse {
-    0% { transform: scale(1) rotateY(180deg); }
-    40% { transform: scale(1.2) rotateY(180deg); }
-    100% { transform: scale(1) rotateY(180deg); }
-  }
-
-  canvas#particles {
+  /* 1️⃣ Alt Katman - Gradient */
+  #gradient-bg {
     position: fixed;
     inset: 0;
-    pointer-events: none;
-    z-index: 10;
+    background: linear-gradient(270deg, #ff6f61, #6a5acd, #00b4d8, #ffd166);
+    background-size: 800% 800%;
+    animation: gradientFlow 24s ease infinite;
+    z-index: -3;
   }
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* 2️⃣ Orta Katman - Canvas Partikülleri */
+  #particle-layer {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+  }
+
+  /* 3️⃣ Üst Katman - SVG Overlay */
+  #svg-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.4;
+  }
+
 </style>
 </head>
 <body>
 
-<h1>🧠 Hafıza Oyunu</h1>
-<canvas id="particles"></canvas>
-<div id="board"></div>
+<div id="gradient-bg"></div>
+<canvas id="particle-layer"></canvas>
+<svg id="svg-overlay" viewBox="0 0 1440 320" preserveAspectRatio="none">
+  <path fill="white" fill-opacity="0.2" d="M0,64L48,90.7C96,117,192,171,288,181.3C384,192,480,160,576,138.7C672,117,768,107,864,117.3C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+</svg>
 
 <script>
-// === Ayarlar ===
-const TOTAL_IMAGES = 12; 
-const IMAGE_PATH = "./images/"; 
-const TOTAL_LEVELS = 5;
+/* 🌌 Partikül Katmanı */
+const canvas = document.getElementById('particle-layer');
+const ctx = canvas.getContext('2d');
+let particles = [];
 
-// === Değişkenler ===
-let level = 1;
-let flipped = [];
-let matchedPairs = 0;
-
-// === Başlat ===
-startLevel();
-
-function startLevel() {
-  matchedPairs = 0;
-  flipped = [];
-  const pairCount = level + 1;
-  const selected = pickUniqueRandomImages(pairCount);
-  const cards = shuffle([...selected, ...selected]);
-  renderBoard(cards);
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-function pickUniqueRandomImages(count){
-  const pool = Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
-  const out=[];
-  while(out.length<count){
-    const idx = Math.floor(Math.random()*pool.length);
-    out.push(pool.splice(idx,1)[0]);
+function createParticles(count = 25) {
+  particles = [];
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 40 + 20,
+      speed: Math.random() * 0.3 + 0.1,
+      angle: Math.random() * Math.PI * 2,
+      color: `rgba(255,255,255,${Math.random() * 0.07 + 0.03})`
+    });
   }
-  return out;
 }
 
-function renderBoard(cards){
-  const board=document.getElementById('board');
-  board.innerHTML='';
-  cards.forEach(src=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.dataset.src = src; // ✅ doğru eşleşme için dataset'e yazıyoruz
-    card.innerHTML=`
-      <div class="inner">
-        <div class="front"><img src="${src}"></div>
-        <div class="back"></div>
-      </div>
-    `;
-    card.addEventListener('click',()=>flipCard(card));
-    board.appendChild(card);
-  });
-}
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.angle += 0.001;
+    p.x += Math.cos(p.angle) * p.speed;
+    p.y += Math.sin(p.angle) * p.speed;
 
-function flipCard(card){
-  if(card.classList.contains('flipped')||flipped.length===2)return;
-  card.classList.add('flipped');
-  flipped.push(card);
-  if(flipped.length===2){
-    const [a,b]=flipped;
-    if(a.dataset.src===b.dataset.src){  // ✅ doğru karşılaştırma
-      setTimeout(()=>{
-        a.classList.add('matched');
-        b.classList.add('matched');
-        spawnParticles(a);
-        spawnParticles(b);
-        flipped=[];
-        matchedPairs++;
-        if(matchedPairs===level+1){
-          setTimeout(()=>{level++; startLevel();},800);
-        }
-      },250);
-    }else{
-      setTimeout(()=>{
-        a.classList.remove('flipped');
-        b.classList.remove('flipped');
-        flipped=[];
-      },700);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+
+    // ekran dışına çıkarsa yeniden konumla
+    if (p.x < -50 || p.x > canvas.width+50 || p.y < -50 || p.y > canvas.height+50) {
+      p.x = Math.random() * canvas.width;
+      p.y = Math.random() * canvas.height;
     }
-  }
+  });
+  requestAnimationFrame(animateParticles);
 }
 
-// === Shuffle ===
-function shuffle(arr){
-  let a=[...arr];
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
+createParticles();
+animateParticles();
+</script>
 
-// === Partikül Efekti ===
-const canvas=document.getElementById('particles');
-const ctx=canvas.getContext('2d');
-let particles=[];
-function resize(){canvas.width=window.innerWidth; canvas.height=window.innerHeight;}
-window.addEventListene
+</body>
+</html>
