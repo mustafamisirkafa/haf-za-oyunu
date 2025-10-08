@@ -119,8 +119,8 @@
 
 <script>
 // === Ayarlar ===
-const TOTAL_IMAGES = 12; // hızlı deneme için az tuttum, istersen 41 yaparız
-const IMAGE_PATH = "./images/"; // kendi klasörüne göre ayarla
+const TOTAL_IMAGES = 12; 
+const IMAGE_PATH = "./images/"; 
 const TOTAL_LEVELS = 5;
 
 // === Değişkenler ===
@@ -156,29 +156,30 @@ function renderBoard(cards){
   cards.forEach(src=>{
     const card=document.createElement('div');
     card.className='card';
+    card.dataset.src = src; // ✅ doğru eşleşme için dataset'e yazıyoruz
     card.innerHTML=`
       <div class="inner">
         <div class="front"><img src="${src}"></div>
         <div class="back"></div>
       </div>
     `;
-    card.addEventListener('click',()=>flipCard(card,src));
+    card.addEventListener('click',()=>flipCard(card));
     board.appendChild(card);
   });
 }
 
-function flipCard(card, src){
+function flipCard(card){
   if(card.classList.contains('flipped')||flipped.length===2)return;
   card.classList.add('flipped');
-  flipped.push({card,src});
+  flipped.push(card);
   if(flipped.length===2){
-    const[a,b]=flipped;
-    if(a.src===b.src){
+    const [a,b]=flipped;
+    if(a.dataset.src===b.dataset.src){  // ✅ doğru karşılaştırma
       setTimeout(()=>{
-        a.card.classList.add('matched');
-        b.card.classList.add('matched');
-        spawnParticles(a.card);
-        spawnParticles(b.card);
+        a.classList.add('matched');
+        b.classList.add('matched');
+        spawnParticles(a);
+        spawnParticles(b);
         flipped=[];
         matchedPairs++;
         if(matchedPairs===level+1){
@@ -187,8 +188,8 @@ function flipCard(card, src){
       },250);
     }else{
       setTimeout(()=>{
-        a.card.classList.remove('flipped');
-        b.card.classList.remove('flipped');
+        a.classList.remove('flipped');
+        b.classList.remove('flipped');
         flipped=[];
       },700);
     }
@@ -210,42 +211,4 @@ const canvas=document.getElementById('particles');
 const ctx=canvas.getContext('2d');
 let particles=[];
 function resize(){canvas.width=window.innerWidth; canvas.height=window.innerHeight;}
-window.addEventListener('resize',resize); resize();
-
-function spawnParticles(el){
-  const rect=el.getBoundingClientRect();
-  const cx=rect.left+rect.width/2;
-  const cy=rect.top+rect.height/2;
-  for(let i=0;i<15;i++){
-    particles.push({
-      x:cx,y:cy,
-      vx:(Math.random()-0.5)*4,
-      vy:(Math.random()-0.5)*4-2,
-      r:Math.random()*3+2,
-      life:60,
-      color:`hsl(${Math.random()*360},100%,60%)`
-    });
-  }
-}
-
-function animate(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  particles.forEach((p,i)=>{
-    p.x+=p.vx;
-    p.y+=p.vy;
-    p.vy+=0.05;
-    p.life--;
-    ctx.globalAlpha=p.life/60;
-    ctx.fillStyle=p.color;
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fill();
-  });
-  particles=particles.filter(p=>p.life>0);
-  requestAnimationFrame(animate);
-}
-animate();
-</script>
-
-</body>
-</html>
+window.addEventListene
