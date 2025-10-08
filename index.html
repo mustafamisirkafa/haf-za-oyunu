@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>🧠 Hafıza Oyunu Deluxe</title>
 <style>
-  :root {
-    --accent:#f77f00;
-  }
   html,body {
     margin:0; padding:0; height:100%;
     font-family: Arial, Helvetica, sans-serif; color:#fff;
@@ -22,7 +19,6 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
-    display: block;
   }
   #gradient { z-index: 0; }
   #shimmer { z-index: 1; opacity: 0.25; }
@@ -36,11 +32,10 @@
     opacity:0; visibility:hidden;
     transition: opacity .4s ease, visibility .4s ease;
   }
-  .overlay.show {
-    opacity:1; visibility:visible;
-  }
+  .overlay.show { opacity:1; visibility:visible; }
+
   .menu-btn {
-    background:var(--accent); color:#fff; border:none; cursor:pointer;
+    background:#f77f00; color:#fff; border:none; cursor:pointer;
     padding:12px 22px; border-radius:12px; font-size:18px; width:220px;
     box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
@@ -63,15 +58,16 @@
     grid-template-columns: repeat(3, 1fr);
     gap:10px; padding:12px; justify-items:center;
     height: calc(100dvh - 70px); overflow-y:auto;
-    position: relative; z-index: 5;
+    position: relative; 
+    z-index: 5;
   }
   .card {
     width:30vw; max-width:120px; aspect-ratio:1/1;
     border-radius:14px; overflow:hidden; cursor:pointer; perspective:900px;
-    position:relative;
-    border: 4px solid #fff;
-    box-shadow: 0 0 12px rgba(0,0,0,.5);
     background:#000;
+    border:4px solid #fff;
+    box-shadow:0 0 12px rgba(0,0,0,.5);
+    position:relative;
   }
   .inner {
     width:100%; height:100%; transform-style:preserve-3d;
@@ -82,7 +78,7 @@
     position:absolute; inset:0; backface-visibility:hidden; border-radius:14px;
   }
   .front { transform: rotateY(180deg);}
-  .front img { width:100%; height:100%; object-fit:cover; }
+  .front img { width:100%; height:100%; object-fit:cover; display:block; }
   .back {
     background-color:#d62828;
     background-image:
@@ -90,40 +86,27 @@
       repeating-linear-gradient(-45deg, #fff 0px, #fff 3px, transparent 3px, transparent 10px);
     background-size:20px 20px; border:2px solid #fff;
   }
-  .matched {
-    pointer-events:none; border:3px solid #32d74b; filter:brightness(1.3);
-    animation: zoomFlash .6s ease both;
-  }
-  @keyframes zoomFlash {
-    0%{ transform: scale(1)}
-    40%{ transform: scale(1.25); box-shadow:0 0 18px #32d74b}
-    100%{ transform: scale(1); box-shadow:none}
-  }
 </style>
 </head>
 <body>
 
-<!-- 🌈 Arka Plan -->
 <canvas id="gradient"></canvas>
 <canvas id="shimmer"></canvas>
 
-<!-- 📌 Ana Menü -->
 <section id="menu" class="overlay show">
   <h1>🧠 Hafıza Oyunu Deluxe</h1>
   <button class="menu-btn" id="startBtn">🎮 Oyuna Başla</button>
 </section>
 
-<!-- 🕹 Oyun üst bar -->
 <header id="header">
   <div class="badge">Seviye: <span id="levelDisplay">1</span></div>
   <div class="badge">Puan: <span id="scoreDisplay">0</span></div>
 </header>
 
-<!-- 🧠 Oyun alanı -->
 <main id="board"></main>
 
 <script>
-const IMAGE_PATH = "./images/";
+const IMAGE_PATH = "https://picsum.photos/200?random="; // Test için
 const TOTAL_IMAGES = 41;
 const TOTAL_LEVELS = 10;
 const MATCH_SCORE = 10;
@@ -166,13 +149,22 @@ function nextLevel(){
 }
 
 function pickImages(count){
-  const all = Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
+  const all = Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}`);
   const chosen=[];
   while(chosen.length<count && all.length>0){
     const idx=Math.floor(Math.random()*all.length);
     chosen.push(all.splice(idx,1)[0]);
   }
   return chosen;
+}
+
+function shuffle(arr){
+  let a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
 }
 
 function flipCard(card,src){
@@ -207,5 +199,31 @@ function flipCard(card,src){
   }
 }
 
-/* 🌈 Yumuşak degrade animasyonu */
-const gradientCanvas=document.getElementById
+/* 🌈 Arka Plan */
+const gradientCanvas=document.getElementById('gradient');
+const gctx=gradientCanvas.getContext('2d');
+function resize(){gradientCanvas.width=innerWidth;gradientCanvas.height=innerHeight;}
+window.addEventListener('resize',resize);resize();
+let t=0;
+function drawGradient(){
+  const w=gradientCanvas.width,h=gradientCanvas.height;
+  const grd=gctx.createLinearGradient(
+    w*Math.sin(t/1000),
+    h*Math.cos(t/1000),
+    w*Math.cos(t/1000),
+    h*Math.sin(t/1000)
+  );
+  grd.addColorStop(0,'#ff6f61');
+  grd.addColorStop(0.33,'#6a5acd');
+  grd.addColorStop(0.66,'#00b4d8');
+  grd.addColorStop(1,'#ffd166');
+  gctx.fillStyle=grd;
+  gctx.fillRect(0,0,w,h);
+  t+=1;
+  requestAnimationFrame(drawGradient);
+}
+drawGradient();
+</script>
+
+</body>
+</html>
