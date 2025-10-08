@@ -135,4 +135,118 @@ window.addEventListener('resize', resizeBubbles);
 resizeBubbles();
 const bubbleArr = Array.from({length:30}).map(()=>({
   x:Math.random()*bubbles.width,
-  y:Ma
+  y:Math.random()*bubbles.height,
+  r:Math.random()*40+20,
+  s:Math.random()*0.3+0.1,
+  a:Math.random()*Math.PI*2,
+  c:`rgba(255,255,255,${Math.random()*0.07+0.03})`
+}));
+function animateBubbles(){
+  bctx.clearRect(0,0,bubbles.width,bubbles.height);
+  for(const p of bubbleArr){
+    p.a+=0.0015; p.x+=Math.cos(p.a)*p.s; p.y+=Math.sin(p.a)*p.s;
+    bctx.beginPath(); bctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    bctx.fillStyle=p.c; bctx.fill();
+    if(p.x<-p.r||p.x>bubbles.width+p.r||p.y<-p.r||p.y>bubbles.height+p.r){
+      p.x=Math.random()*bubbles.width; p.y=Math.random()*bubbles.height;
+    }
+  }
+  requestAnimationFrame(animateBubbles);
+}
+animateBubbles();
+
+// 🧠 Hafıza Oyunu
+const IMAGE_PATH="./images/";
+const TOTAL_IMAGES=41;
+const TOTAL_LEVELS=10;
+const MATCH_SCORE=10;
+const FAIL_PENALTY=2;
+
+let level=1, score=0, flipped=[], matchedPairs=0, mistakes=0, soundOn=true;
+const board=document.getElementById('board');
+const levelEl=document.getElementById('levelDisplay');
+const scoreEl=document.getElementById('scoreDisplay');
+const playBtn=document.getElementById('playBtn');
+const soundToggle=document.getElementById('soundToggle');
+const flipSound=document.getElementById('flipSound');
+const matchSound=document.getElementById('matchSound');
+const levelUpSound=document.getElementById('levelUpSound');
+
+playBtn.onclick=()=>{
+  document.getElementById('menu').style.display='none';
+  document.getElementById('header').style.display='flex';
+  board.style.display='grid';
+  startLevel();
+};
+soundToggle.onclick=()=>setSound(!soundOn);
+function setSound(on){
+  soundOn=on;
+  [flipSound,matchSound,levelUpSound].forEach(a=>a.muted=!on);
+  soundToggle.textContent=on?"🔊 Ses: Açık":"🔇 Ses: Kapalı";
+}
+
+function startLevel(){
+  levelEl.textContent=level;
+  scoreEl.textContent=score;
+  mistakes=0;flipped=[];matchedPairs=0;
+  const pairCount=level+1;
+  const selected=pickUniqueRandomImages(pairCount);
+  const cards=shuffle([...selected,...selected]);
+  renderBoard(cards);
+}
+function pickUniqueRandomImages(count){
+  const pool=Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
+  const out=[];
+  while(out.length<count){
+    out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  }
+  return out;
+}
+function renderBoard(cards){
+  board.innerHTML='';
+  cards.forEach(src=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`<div class="inner"><div class="front"><img src="${src}"></div><div class="back"></div></div>`;
+    card.addEventListener('click',()=>flipCard(card,src));
+    board.appendChild(card);
+  });
+}
+function flipCard(card,src){
+  if(card.classList.contains('flipped')||flipped.length===2)return;
+  if(soundOn){flipSound.currentTime=0;flipSound.play().catch(()=>{});}
+  card.classList.add('flipped');flipped.push({card,src});
+  if(flipped.length===2){
+    const[a,b]=flipped;
+    if(a.src===b.src){
+      setTimeout(()=>{
+        if(soundOn){matchSound.currentTime=0;matchSound.play().catch(()=>{});}
+        a.card.classList.add('matched');b.card.classList.add('matched');
+        flipped=[];matchedPairs++;score+=MATCH_SCORE;scoreEl.textContent=score;
+        if(matchedPairs===level+1){setTimeout(()=>levelComplete(),600);}
+      },280);
+    }else{
+      mistakes++;score=Math.max(0,score-FAIL_PENALTY);scoreEl.textContent=score;
+      setTimeout(()=>{a.card.classList.remove('flipped');b.card.classList.remove('flipped');flipped=[];},650);
+    }
+  }
+}
+function levelComplete(){
+  if(soundOn){levelUpSound.currentTime=0;levelUpSound.play().catch(()=>{});}
+  level++;
+  if(level>TOTAL_LEVELS){
+    alert(`🎉 Oyun bitti!\nToplam puan: ${score}`);
+    location.reload();
+  }else{
+    startLevel();
+  }
+}
+function shuffle(arr){
+  let a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+</script>
