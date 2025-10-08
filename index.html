@@ -120,27 +120,49 @@
       100% { transform: scale(1); box-shadow: none; }
     }
 
-    #leaderboard {
-      background: rgba(0,0,0,0.7);
-      padding: 10px;
-      margin: 10px auto;
-      width: 90%;
-      max-width: 400px;
+    /* 🏆 Popup Leaderboard */
+    #leaderboardPopup {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px);
+      z-index: 10;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #leaderboardBox {
+      background: #222;
+      padding: 20px;
       border-radius: 10px;
-    }
-
-    #leaderboard h2 {
-      margin-top: 0;
+      max-width: 300px;
+      width: 80%;
       text-align: center;
-      font-size: 18px;
+      box-shadow: 0 0 15px #f77f00;
     }
 
-    #leaderboard ol {
+    #leaderboardBox h2 {
+      margin-top: 0;
+      color: #f77f00;
+    }
+
+    #leaderboardBox ol {
+      text-align: left;
       padding-left: 20px;
     }
 
-    #leaderboard li {
-      margin: 4px 0;
+    #closePopup {
+      background: #f77f00;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -156,9 +178,13 @@
 
 <div id="board"></div>
 
-<div id="leaderboard">
-  <h2>🏆 Lider Tablosu</h2>
-  <ol id="leaderList"></ol>
+<!-- 🏆 Popup Leaderboard -->
+<div id="leaderboardPopup">
+  <div id="leaderboardBox">
+    <h2>🏆 Yeni Rekor!</h2>
+    <ol id="leaderList"></ol>
+    <button id="closePopup">Kapat</button>
+  </div>
 </div>
 
 <audio id="flipSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
@@ -173,7 +199,6 @@ let level = 1;
 let flippedCards = [];
 let matchedPairs = 0;
 let score = 0;
-let usedImages = [];
 
 const flipSound = document.getElementById('flipSound');
 const matchSound = document.getElementById('matchSound');
@@ -257,7 +282,8 @@ function updateScore() {
 function nextLevel() {
   level++;
   if (level > TOTAL_LEVELS) {
-    saveScore();
+    const brokeRecord = saveScore();
+    if (brokeRecord) showLeaderboardPopup();
     alert("🎉 Tüm seviyeleri bitirdin!");
     level = 1;
     score = 0;
@@ -274,22 +300,29 @@ function shuffle(array) {
   return arr;
 }
 
-/* 🏆 Lider Tablosu */
+/* 🏆 Leaderboard */
 function saveScore() {
   let scores = JSON.parse(localStorage.getItem('leaderboard') || "[]");
   const name = prompt("İsmini gir 📝") || "Oyuncu";
   scores.push({name, score});
   scores.sort((a,b) => b.score - a.score);
+  const brokeRecord = scores.findIndex(s => s.name === name && s.score === score) < 5;
   scores = scores.slice(0, 5);
   localStorage.setItem('leaderboard', JSON.stringify(scores));
-  renderLeaderboard();
+  return brokeRecord;
 }
 
-function renderLeaderboard() {
-  const scores = JSON.parse(localStorage.getItem('leaderboard') || "[]");
+function showLeaderboardPopup() {
+  const popup = document.getElementById('leaderboardPopup');
   const list = document.getElementById('leaderList');
+  const scores = JSON.parse(localStorage.getItem('leaderboard') || "[]");
   list.innerHTML = scores.map(s => `<li>${s.name}: ${s.score} puan</li>`).join('');
+  popup.style.display = 'flex';
 }
+
+document.getElementById('closePopup').addEventListener('click', () => {
+  document.getElementById('leaderboardPopup').style.display = 'none';
+});
 
 /* 🎇 Partikül Arka Plan */
 const canvas = document.getElementById('particles');
@@ -329,7 +362,6 @@ function drawParticles() {
 }
 drawParticles();
 
-renderLeaderboard();
 startLevel();
 </script>
 
