@@ -2,171 +2,294 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🧠 Hafıza Oyunu - Phaser 3</title>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>🧠 Hafıza Oyunu — Phaser 3</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #ff6f61, #6a5acd, #00b4d8);
-      background-size: 300% 300%;
-      animation: gradientShift 10s ease infinite;
-      height: 100%;
-      overflow: hidden;
+    html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e0e10}
+    /* Hareketli gradient arka plan */
+    body{
+      background: linear-gradient(270deg,#ff6f61,#6a5acd,#00b4d8,#ffd166);
+      background-size: 800% 800%;
+      animation: grad 24s ease infinite;
     }
-    @keyframes gradientShift {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    @keyframes grad{
+      0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
     }
-    canvas {
-      display: block;
-      margin: 0 auto;
-      touch-action: none;
+    canvas{display:block;margin:0 auto;touch-action:none}
+    /* Basit UI */
+    .ui{
+      position:fixed; inset:auto 0 0 0; display:flex; justify-content:center; gap:8px;
+      padding:8px; pointer-events:none;
     }
+    .pill{pointer-events:auto; background:#0009; color:#fff; border:1px solid #fff2;
+      border-radius:999px; padding:6px 12px; font:600 14px/1 system-ui,Arial}
+    .pill.btn{cursor:pointer}
+    /* Rekor popup */
+    .popup{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(0,0,0,.6); backdrop-filter: blur(6px); z-index:9;
+    }
+    .box{
+      width:min(92%,360px); background:#141416; border:1px solid #ffffff22; color:#fff;
+      border-radius:14px; padding:16px; text-align:center; box-shadow:0 10px 30px #0008;
+    }
+    .box h2{margin:.2rem 0 1rem 0; color:#ffd166}
+    .box ol{margin:0 0 1rem 1.1rem; text-align:left}
+    .box .btn{display:inline-block; background:#f77f00; color:#fff; padding:10px 14px; border-radius:10px; cursor:pointer}
   </style>
 </head>
 <body>
 
+<!-- Alt bar (Seviye / Skor / Ses) -->
+<div class="ui">
+  <div class="pill">Seviye: <span id="lvl">1</span></div>
+  <div class="pill">Puan: <span id="pts">0</span></div>
+  <div class="pill btn" id="sound">🔊 Ses: Açık</div>
+</div>
+
+<!-- Rekor popup (sadece rekor kırınca açılır) -->
+<div class="popup" id="lb">
+  <div class="box">
+    <h2>🏆 Yeni Rekor!</h2>
+    <ol id="lbList"></ol>
+    <div class="btn" id="lbClose">Kapat</div>
+  </div>
+</div>
+
 <script>
-class MemoryGame extends Phaser.Scene {
-  constructor() {
-    super('MemoryGame');
-  }
+/* ------------------------------
+   Genel Ayarlar
+------------------------------ */
+const TOTAL_IMAGES = 41;          // images/1.jpg .. images/41.jpg
+const TOTAL_LEVELS = 10;          // 1→2 çift ... 10→11 çift
+const MATCH_SCORE = 10;
+const FAIL_PENALTY = 2;
 
-  preload() {
-    // Kart arkası (tek desen)
-    this.load.image('back', 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Card_back_05.svg/256px-Card_back_05.svg.png');
+// Ses linkleri (hafif)
+const SND_MATCH = 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3';
+const SND_FLIP  = 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3';
+const SND_NEXT  = 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3';
 
-    // 📌 Örnek olarak 1-8 arası 8 kart görseli kullanıyoruz
-    // Sen kendi GitHub images klasörüne göre değiştireceksin ↓
-    for (let i = 1; i <= 8; i++) {
-      this.load.image(`card${i}`, `https://raw.githubusercontent.com/mustafamisirkafa/haf-za-oyunu/main/images/${i}.jpg`);
+let soundOn = true;
+document.getElementById('sound').onclick = () => {
+  soundOn = !soundOn;
+  document.getElementById('sound').textContent = soundOn ? '🔊 Ses: Açık' : '🔇 Ses: Kapalı';
+};
+
+/* ------------------------------
+   Scene: Menu
+------------------------------ */
+class MenuScene extends Phaser.Scene{
+  constructor(){ super('menu'); }
+  preload(){
+    // Kart arkası (SVG – açık kaynak)
+    this.load.image('cardBack','https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/Card_back_05.svg/256px-Card_back_05.svg.png');
+    // Tüm havuzu önceden yükleyelim (CORS uygun)
+    for(let i=1;i<=TOTAL_IMAGES;i++){
+      this.load.image('img'+i, `https://raw.githubusercontent.com/mustafamisirkafa/haf-za-oyunu/main/images/${i}.jpg`);
     }
-
-    // Ses
-    this.load.audio('match', 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3');
+    this.load.audio('snd_match', SND_MATCH);
+    this.load.audio('snd_flip',  SND_FLIP);
+    this.load.audio('snd_next',  SND_NEXT);
   }
+  create(){
+    const {width:w,height:h} = this.scale;
 
-  create() {
-    this.cards = [];
-    this.firstCard = null;
-    this.canClick = true;
-    this.matchedPairs = 0;
-    this.matchSound = this.sound.add('match');
-
-    const pairs = 4; // 4 çift
-    const totalCards = pairs * 2;
-    const cardKeys = [];
-    for (let i = 1; i <= pairs; i++) {
-      cardKeys.push(`card${i}`, `card${i}`);
-    }
-    Phaser.Utils.Array.Shuffle(cardKeys);
-
-    const cols = 3;
-    const spacing = 10;
-    const cardSize = Math.min(this.sys.game.config.width / (cols + 0.5), 120);
-    const rows = Math.ceil(totalCards / cols);
-    const offsetX = (this.sys.game.config.width - (cols * cardSize + (cols - 1) * spacing)) / 2;
-    const offsetY = (this.sys.game.config.height - (rows * cardSize + (rows - 1) * spacing)) / 2;
-
-    cardKeys.forEach((key, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const x = offsetX + col * (cardSize + spacing) + cardSize/2;
-      const y = offsetY + row * (cardSize + spacing) + cardSize/2;
-
-      const card = this.add.image(x, y, 'back').setDisplaySize(cardSize, cardSize).setInteractive();
-      card.originalKey = key;
-      card.isFlipped = false;
-
-      card.on('pointerup', () => this.handleCardClick(card));
-
-      this.cards.push(card);
-    });
-  }
-
-  handleCardClick(card) {
-    if (!this.canClick || card.isFlipped) return;
-
-    this.flipCard(card);
-
-    if (!this.firstCard) {
-      this.firstCard = card;
-    } else {
-      this.canClick = false;
-      if (this.firstCard.originalKey === card.originalKey) {
-        // ✅ Eşleşti
-        this.time.delayedCall(500, () => {
-          this.matchSound.play();
-          this.firstCard.disableInteractive();
-          card.disableInteractive();
-          this.matchedPairs++;
-          if (this.matchedPairs === 4) this.winGame();
-          this.firstCard = null;
-          this.canClick = true;
-        });
-      } else {
-        // ❌ Eşleşmedi
-        this.time.delayedCall(1000, () => {
-          this.unflipCard(this.firstCard);
-          this.unflipCard(card);
-          this.firstCard = null;
-          this.canClick = true;
-        });
-      }
-    }
-  }
-
-  flipCard(card) {
-    this.tweens.add({
-      targets: card,
-      scaleX: 0,
-      duration: 150,
-      onComplete: () => {
-        card.setTexture(card.originalKey);
-        this.tweens.add({ targets: card, scaleX: 1, duration: 150 });
-        card.isFlipped = true;
-      }
-    });
-  }
-
-  unflipCard(card) {
-    this.tweens.add({
-      targets: card,
-      scaleX: 0,
-      duration: 150,
-      onComplete: () => {
-        card.setTexture('back');
-        this.tweens.add({ targets: card, scaleX: 1, duration: 150 });
-        card.isFlipped = false;
-      }
-    });
-  }
-
-  winGame() {
-    this.add.text(this.sys.game.config.width / 2, this.sys.game.config.height / 2, '🎉 Tebrikler!', {
-      fontSize: '32px',
-      color: '#fff'
+    const title = this.add.text(w/2, h*0.28, '🧠 Hafıza Eşleştirme', {
+      fontFamily:'Arial', fontSize: Math.round(h*0.045)+'px', color:'#ffffff'
     }).setOrigin(0.5);
-    this.time.delayedCall(3000, () => location.reload());
+
+    const play = this.makeBtn(w/2, h*0.50, '🎮 Oyuna Başla', ()=> this.scene.start('game',{level:1, score:0}));
+    const board = this.makeBtn(w/2, h*0.62, '🏆 Rekorlar', ()=> showLeaderboardPopupOnly());
+
+    // sessiz başlatma hack (mobil)
+    this.input.once('pointerdown', ()=>{
+      const a1=this.sound.add('snd_match'),a2=this.sound.add('snd_flip'),a3=this.sound.add('snd_next');
+      [a1,a2,a3].forEach(a=>{a.setVolume(0); a.play(); setTimeout(()=>{a.stop(); a.setVolume(1)},50);});
+    });
+  }
+  makeBtn(x,y,label,onClick){
+    const btn = this.add.text(x,y,label,{
+      fontFamily:'Arial', fontSize:'22px', color:'#ffffff', backgroundColor:'#f77f00',
+      padding:{left:16,right:16,top:10,bottom:10}
+    }).setOrigin(0.5).setInteractive({useHandCursor:true});
+    btn.on('pointerup', onClick);
+    btn.setStyle({borderRadius:'12px'}); // görsel amaçlı (DOM değil ama hoş)
+    return btn;
   }
 }
 
+/* ------------------------------
+   Scene: Game
+------------------------------ */
+class GameScene extends Phaser.Scene{
+  constructor(){ super('game'); }
+  init(data){ this.level=data.level||1; this.score=data.score||0; }
+  create(){
+    this.flipSound  = this.sound.add('snd_flip');
+    this.matchSound = this.sound.add('snd_match');
+    this.nextSound  = this.sound.add('snd_next');
+
+    this.flipped = [];     // [sprite]
+    this.matched = 0;      // kaç çift tamamlandı
+    this.mistakes= 0;
+
+    // UI alt bar güncelle
+    document.getElementById('lvl').textContent = this.level;
+    document.getElementById('pts').textContent = this.score;
+
+    // Bu seviyede kaç çift?
+    this.pairs = Math.min(11, this.level+1); // 2..11
+    // Havuzdan benzersiz resimler seç
+    const pool = Phaser.Utils.Array.NumberArray(1,TOTAL_IMAGES);
+    Phaser.Utils.Array.Shuffle(pool);
+    const chosen = pool.slice(0,this.pairs).map(i=>'img'+i);
+    // Deste: her seçilenin 2 kopyası
+    const deck = Phaser.Utils.Array.Shuffle([...chosen, ...chosen]);
+
+    // Grid: 3 kolon sabit — satırlar otomatik
+    const cols = 3;
+    const gap  = 10;
+    const {width:w,height:h} = this.scale;
+    // kart boyutu — 3 kolon, gap’ler dahil sığacak şekilde
+    const cardSize = Math.min(120, Math.floor((w - (cols+1)*gap)/cols));
+    const rows = Math.ceil(deck.length / cols);
+    const gridHeight = rows*cardSize + (rows+1)*gap;
+    const startY = Math.max((h - gridHeight)/2, 10);
+    let idx=0;
+    this.cards = [];
+
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        if (idx>=deck.length) break;
+        const x = gap + c*(cardSize+gap) + cardSize/2;
+        const y = startY + gap + r*(cardSize+gap) + cardSize/2;
+
+        const back = this.add.image(x,y,'cardBack').setDisplaySize(cardSize,cardSize).setInteractive();
+        back.revealedKey = deck[idx];
+        back.isOpen = false;
+        back.on('pointerup', ()=> this.onCard(back));
+        this.cards.push(back);
+        idx++;
+      }
+    }
+  }
+
+  onCard(card){
+    if (card.isOpen || this.flipped.length===2) return;
+
+    if (soundOn) this.flipSound.play({volume:0.9});
+    this.flip(card, card.revealedKey); // aç
+
+    this.flipped.push(card);
+    if (this.flipped.length===2){
+      const [a,b]=this.flipped;
+      if (a.revealedKey===b.revealedKey){
+        // eşleşti
+        this.time.delayedCall(180, ()=>{
+          if (soundOn) this.matchSound.play({volume:0.9});
+          this.pulse(a); this.pulse(b);
+          a.disableInteractive(); b.disableInteractive();
+          this.flipped.length = 0;
+          this.matched++;
+          this.score += MATCH_SCORE;
+          document.getElementById('pts').textContent = this.score;
+
+          if (this.matched===this.pairs){
+            // seviye bitti
+            this.time.delayedCall(350, ()=>{
+              if (soundOn) this.nextSound.play();
+              if (this.level>=TOTAL_LEVELS){
+                // Oyun bitti → rekor mu?
+                const broke = saveScore(this.score);
+                if (broke) showLeaderboardPopup();
+                alert(`🎉 Oyun bitti!\nToplam puan: ${this.score}`);
+                this.scene.start('menu');
+              }else{
+                this.scene.start('game',{level:this.level+1, score:this.score});
+              }
+            });
+          }
+        });
+      }else{
+        // eşleşmedi
+        this.mistakes++;
+        this.score = Math.max(0, this.score - FAIL_PENALTY);
+        document.getElementById('pts').textContent = this.score;
+
+        this.time.delayedCall(550, ()=>{
+          this.flip(a, 'cardBack'); a.isOpen=false;
+          this.flip(b, 'cardBack'); b.isOpen=false;
+          this.flipped.length=0;
+        });
+      }
+    }
+  }
+
+  flip(sprite, key){
+    this.tweens.add({
+      targets:sprite, scaleX:0, duration:120, ease:'Cubic.easeIn',
+      onComplete:()=>{
+        sprite.setTexture(key);
+        this.tweens.add({targets:sprite, scaleX:1, duration:120, ease:'Cubic.easeOut'});
+        sprite.isOpen = (key!=='cardBack');
+      }
+    });
+  }
+  pulse(sprite){
+    this.tweens.add({
+      targets:sprite, scale: {from:1, to:1.15}, yoyo:true, duration:180, ease:'Sine.easeOut'
+    });
+  }
+}
+
+/* ------------------------------
+   Phaser Config & Launch
+------------------------------ */
 const config = {
   type: Phaser.AUTO,
   width: window.innerWidth,
   height: window.innerHeight,
-  scene: MemoryGame,
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
-  }
+  backgroundColor: 'rgba(0,0,0,0)',
+  scene: [MenuScene, GameScene],
+  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
 };
+const game = new Phaser.Game(config);
 
-new Phaser.Game(config);
+/* ------------------------------
+   Rekor Tablosu (LocalStorage)
+   – sadece rekor kırınca popup
+------------------------------ */
+function saveScore(score){
+  let scores = JSON.parse(localStorage.getItem('leaderboard')||'[]');
+  const name = prompt('İsmin nedir? 📝') || 'Oyuncu';
+  scores.push({name, score});
+  scores.sort((a,b)=> b.score - a.score);
+  const broke = scores.findIndex(s=> s.name===name && s.score===score) < 5;
+  scores = scores.slice(0,5);
+  localStorage.setItem('leaderboard', JSON.stringify(scores));
+  return broke;
+}
+function showLeaderboardPopup(){
+  const list = document.getElementById('lbList');
+  const scores = JSON.parse(localStorage.getItem('leaderboard')||'[]');
+  list.innerHTML = scores.map(s=> `<li>${s.name}: ${s.score} puan</li>`).join('');
+  document.getElementById('lb').style.display='flex';
+}
+function showLeaderboardPopupOnly(){
+  const scores = JSON.parse(localStorage.getItem('leaderboard')||'[]');
+  if (!scores.length){ alert('Henüz rekor yok.'); return; }
+  showLeaderboardPopup();
+}
+document.getElementById('lbClose').onclick = ()=> (document.getElementById('lb').style.display='none');
+
+/* ------------------------------
+   Not: Canvas boyutu değişince
+------------------------------ */
+window.addEventListener('resize', ()=>{
+  game.scale.resize(window.innerWidth, window.innerHeight);
+});
 </script>
-
 </body>
 </html>
