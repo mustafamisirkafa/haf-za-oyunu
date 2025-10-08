@@ -14,18 +14,8 @@
     font-family: Arial, Helvetica, sans-serif; color:#fff;
     overflow:hidden;
   }
-  body {
-    background: linear-gradient(270deg,var(--bg-a),var(--bg-b),var(--bg-c),var(--bg-d));
-    background-size: 800% 800%;
-    animation: gradientFlow 24s ease infinite;
-  }
-  @keyframes gradientFlow {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:0% 50%}
-  }
 
-  /* 🎭 Fade + Blur geçiş animasyonu */
+  /* 🧠 Menü & Overlay */
   .overlay {
     position:fixed; inset:0; display:flex; flex-direction:column;
     justify-content:center; align-items:center; text-align:center;
@@ -37,7 +27,6 @@
   .overlay.show {
     opacity:1; visibility:visible;
   }
-
   .menu-btn {
     background:var(--accent); color:#fff; border:none; cursor:pointer;
     padding:12px 22px; border-radius:12px; font-size:18px; width:220px;
@@ -59,128 +48,6 @@
     margin-left:8px; background:#ffffff22; border:1px solid #ffffff33; color:#fff;
     padding:6px 10px; border-radius:999px; cursor:pointer; font-size:14px;
   }
-<!-- 🌈 3 Katmanlı Canlı Arka Plan -->
-<canvas id="gradient"></canvas>
-<canvas id="bubbles"></canvas>
-<canvas id="shimmer"></canvas>
-
-<style>
-  html, body {
-    margin: 0; padding: 0;
-    height: 100%;
-    overflow: hidden;
-  }
-
-  #gradient, #bubbles, #shimmer {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    display: block;
-  }
-  #gradient { z-index: 0; }
-  #bubbles { z-index: 1; opacity: 0.45; }
-  #shimmer { z-index: 2; opacity: 0.35; }
-</style>
-
-<script>
-/* ========== 🌈 Alt Katman - Yumuşak Degrade Akışı ========== */
-const gradientCanvas = document.getElementById('gradient');
-const gctx = gradientCanvas.getContext('2d');
-function resizeGradient() {
-  gradientCanvas.width = window.innerWidth;
-  gradientCanvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeGradient);
-resizeGradient();
-
-let gradColors = [
-  [255, 111, 97],
-  [106, 90, 205],
-  [0, 180, 216],
-  [255, 209, 102]
-];
-let t = 0;
-function drawGradient() {
-  let w = gradientCanvas.width, h = gradientCanvas.height;
-  let grd = gctx.createLinearGradient(0, 0, w, h);
-  for (let i = 0; i < gradColors.length; i++) {
-    let c = gradColors[i];
-    grd.addColorStop(i / (gradColors.length - 1), `rgb(${c[0]},${c[1]},${c[2]})`);
-  }
-  gctx.fillStyle = grd;
-  gctx.fillRect(0, 0, w, h);
-  // Renkleri akıt
-  if (t % 3 === 0) gradColors.push(gradColors.shift());
-  t++;
-  requestAnimationFrame(drawGradient);
-}
-drawGradient();
-
-/* ========== 🫧 Orta Katman - Baloncuklar ========== */
-const bubbleCanvas = document.getElementById('bubbles');
-const bctx = bubbleCanvas.getContext('2d');
-let bubbles = [];
-function resizeBubbles() {
-  bubbleCanvas.width = window.innerWidth;
-  bubbleCanvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeBubbles);
-resizeBubbles();
-
-for (let i = 0; i < 40; i++) {
-  bubbles.push({
-    x: Math.random() * bubbleCanvas.width,
-    y: Math.random() * bubbleCanvas.height,
-    r: Math.random() * 10 + 4,
-    s: Math.random() * 0.6 + 0.2,
-    a: Math.random() * 0.4 + 0.2
-  });
-}
-
-function drawBubbles() {
-  bctx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
-  bubbles.forEach(b => {
-    bctx.beginPath();
-    bctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    bctx.fillStyle = `rgba(255,255,255,${b.a})`;
-    bctx.fill();
-    b.y -= b.s;
-    if (b.y + b.r < 0) {
-      b.y = bubbleCanvas.height + b.r;
-      b.x = Math.random() * bubbleCanvas.width;
-    }
-  });
-  requestAnimationFrame(drawBubbles);
-}
-drawBubbles();
-
-/* ========== ✨ Üst Katman - Işıltı (Shimmer) ========== */
-const shimmerCanvas = document.getElementById('shimmer');
-const sctx = shimmerCanvas.getContext('2d');
-function resizeShimmer() {
-  shimmerCanvas.width = window.innerWidth;
-  shimmerCanvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeShimmer);
-resizeShimmer();
-
-let shimmerX = -shimmerCanvas.width;
-function drawShimmer() {
-  sctx.clearRect(0, 0, shimmerCanvas.width, shimmerCanvas.height);
-  let grd = sctx.createLinearGradient(shimmerX, 0, shimmerX + shimmerCanvas.width/2, shimmerCanvas.height);
-  grd.addColorStop(0, 'rgba(255,255,255,0)');
-  grd.addColorStop(0.5, 'rgba(255,255,255,0.25)');
-  grd.addColorStop(1, 'rgba(255,255,255,0)');
-  sctx.fillStyle = grd;
-  sctx.fillRect(0, 0, shimmerCanvas.width, shimmerCanvas.height);
-  shimmerX += 0.8;
-  if (shimmerX > shimmerCanvas.width) shimmerX = -shimmerCanvas.width;
-  requestAnimationFrame(drawShimmer);
-}
-drawShimmer();
-</script>
 
   /* Oyun alanı */
   #board {
@@ -188,6 +55,7 @@ drawShimmer();
     grid-template-columns: repeat(3, 1fr);
     gap:10px; padding:12px; justify-items:center;
     height: calc(100dvh - 70px); overflow-y:auto;
+    position: relative; z-index: 3;
   }
   .card {
     width:30vw; max-width:120px; aspect-ratio:1/1;
@@ -233,9 +101,27 @@ drawShimmer();
   #confettiCanvas {
     position:fixed; inset:0; pointer-events:none; z-index:11; display:none;
   }
+
+  /* 🌈 Katmanlı Arka Plan */
+  #gradient, #bubbles, #shimmer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: block;
+  }
+  #gradient { z-index: 0; }
+  #bubbles { z-index: 1; opacity: 0.45; }
+  #shimmer { z-index: 2; opacity: 0.35; }
 </style>
 </head>
 <body>
+
+<!-- 🌈 3 Katmanlı Arka Plan -->
+<canvas id="gradient"></canvas>
+<canvas id="bubbles"></canvas>
+<canvas id="shimmer"></canvas>
 
 <!-- 📌 Ana Menü -->
 <section id="menu" class="overlay show">
@@ -276,181 +162,56 @@ drawShimmer();
 <!-- 🎊 Konfeti Canvas -->
 <canvas id="confettiCanvas"></canvas>
 
+<!-- 🔊 Sesler -->
+<audio id="flipSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_5d0c1c3b4b.mp3?filename=pop-94319.mp3"></audio>
+<audio id="matchSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_d4d86a64f7.mp3?filename=soft-notification-102131.mp3"></audio>
+<audio id="levelUpSound" preload="auto" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2d8a6e8241.mp3?filename=success-1-6297.mp3"></audio>
+
 <script>
-const IMAGE_PATH = "./images/";
-const TOTAL_IMAGES = 12;
-const TOTAL_LEVELS = 5;
-const MATCH_SCORE = 10;
-const FAIL_PENALTY = 2;
-
-let level=1, score=0, flipped=[], matchedPairs=0, mistakes=0, paused=false;
-let soundOn = true;
-
-const board = document.getElementById('board');
-const levelEl = document.getElementById('levelDisplay');
-const scoreEl = document.getElementById('scoreDisplay');
-
-const menu = document.getElementById('menu');
-const pauseMenu = document.getElementById('pauseMenu');
-const leaderboardPopup = document.getElementById('leaderboardPopup');
-
-document.getElementById('startBtn').onclick = startGame;
-document.getElementById('pauseBtn').onclick = ()=>showOverlay(pauseMenu);
-document.getElementById('resumeBtn').onclick = ()=>hideOverlay(pauseMenu);
-document.getElementById('restartBtn').onclick = ()=>{resetGame();startGame();};
-document.getElementById('exitBtn').onclick = ()=>location.reload();
-
-document.getElementById('showLeaderboardBtn').onclick = showLeaderboard;
-document.getElementById('closeLeaderboard').onclick = ()=>hideOverlay(leaderboardPopup);
-
-function showOverlay(el){ el.classList.add('show'); paused=true; }
-function hideOverlay(el){ el.classList.remove('show'); paused=false; }
-
-function startGame(){
-  hideOverlay(menu);
-  document.getElementById('header').style.display='flex';
-  board.style.display='grid';
-  level=1; score=0; nextLevel();
+/* 🌈 Alt Katman - Degrade Akışı */
+const gradientCanvas = document.getElementById('gradient');
+const gctx = gradientCanvas.getContext('2d');
+function resizeGradient(){ gradientCanvas.width=innerWidth; gradientCanvas.height=innerHeight; }
+window.addEventListener('resize',resizeGradient); resizeGradient();
+let gradColors=[[255,111,97],[106,90,205],[0,180,216],[255,209,102]]; let t=0;
+function drawGradient(){
+  let w=gradientCanvas.width,h=gradientCanvas.height;
+  let grd=gctx.createLinearGradient(0,0,w,h);
+  for(let i=0;i<gradColors.length;i++){ let c=gradColors[i]; grd.addColorStop(i/(gradColors.length-1),`rgb(${c[0]},${c[1]},${c[2]})`);}
+  gctx.fillStyle=grd; gctx.fillRect(0,0,w,h);
+  if(t%3===0) gradColors.push(gradColors.shift()); t++;
+  requestAnimationFrame(drawGradient);
 }
+drawGradient();
 
-function resetGame(){ board.innerHTML=''; matchedPairs=0; flipped=[]; mistakes=0; score=0; level=1; }
-
-function nextLevel(){
-  board.innerHTML='';
-  flipped=[]; matchedPairs=0; mistakes=0;
-  levelEl.textContent=level;
-  scoreEl.textContent=score;
-  const pairCount = level+1;
-  const selected = pickImages(pairCount);
-  const cards = shuffle([...selected,...selected]);
-  cards.forEach(src=>{
-    const card=document.createElement('div');
-    card.className='card';
-    card.innerHTML=`
-      <div class="inner">
-        <div class="front"><img src="${src}"></div>
-        <div class="back"></div>
-      </div>`;
-    card.addEventListener('click',()=>flipCard(card,src));
-    board.appendChild(card);
+/* 🫧 Orta Katman - Baloncuklar */
+const bubbleCanvas=document.getElementById('bubbles');
+const bctx=bubbleCanvas.getContext('2d');
+function resizeBubbles(){bubbleCanvas.width=innerWidth;bubbleCanvas.height=innerHeight;}
+window.addEventListener('resize',resizeBubbles);resizeBubbles();
+const bubbles=Array.from({length:40},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*10+4,s:Math.random()*0.6+0.2,a:Math.random()*0.4+0.2}));
+function drawBubbles(){
+  bctx.clearRect(0,0,bubbleCanvas.width,bubbleCanvas.height);
+  bubbles.forEach(b=>{
+    bctx.beginPath();bctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    bctx.fillStyle=`rgba(255,255,255,${b.a})`;bctx.fill();
+    b.y-=b.s;if(b.y+b.r<0){b.y=bubbleCanvas.height+b.r;b.x=Math.random()*bubbleCanvas.width;}
   });
+  requestAnimationFrame(drawBubbles);
 }
+drawBubbles();
 
-function pickImages(count){
-  const all = Array.from({length:TOTAL_IMAGES},(_,i)=>`${IMAGE_PATH}${i+1}.jpg`);
-  const chosen=[];
-  while(chosen.length<count){
-    const idx=Math.floor(Math.random()*all.length);
-    chosen.push(all.splice(idx,1)[0]);
-  }
-  return chosen;
-}
-
-function flipCard(card,src){
-  if(paused) return;
-  if(card.classList.contains('flipped')||flipped.length===2) return;
-  card.classList.add('flipped');
-  flipped.push({card,src});
-  if(flipped.length===2){
-    const[a,b]=flipped;
-    if(a.src===b.src){
-      setTimeout(()=>{
-        a.card.classList.add('matched');
-        b.card.classList.add('matched');
-        flipped=[];
-        matchedPairs++;
-        score+=MATCH_SCORE;
-        scoreEl.textContent=score;
-        if(matchedPairs===level+1){
-          level++;
-          if(level>TOTAL_LEVELS){ endGame(); }
-          else setTimeout(nextLevel,800);
-        }
-      },250);
-    } else {
-      setTimeout(()=>{
-        a.card.classList.remove('flipped');
-        b.card.classList.remove('flipped');
-        flipped=[];
-        score=Math.max(0,score-FAIL_PENALTY);
-        scoreEl.textContent=score;
-      },700);
-    }
-  }
-}
-
-function endGame(){
-  const leaderboard = JSON.parse(localStorage.getItem('leaderboard')||'[]');
-  const name = prompt('İsmini yaz 📝') || 'Oyuncu';
-  leaderboard.push({name,score});
-  leaderboard.sort((a,b)=>b.score-a.score);
-  const index = leaderboard.findIndex(s=>s.name===name&&s.score===score);
-  if(index<5){
-    document.getElementById('celebration').style.display='flex';
-    fireConfetti();
-    setTimeout(()=>document.getElementById('celebration').style.display='none',3000);
-  }
-  localStorage.setItem('leaderboard',JSON.stringify(leaderboard.slice(0,5)));
-  showLeaderboard();
-}
-
-function showLeaderboard(){
-  const list = document.getElementById('leaderList');
-  const data = JSON.parse(localStorage.getItem('leaderboard')||'[]');
-  list.innerHTML = data.map((s,i)=>`<li>${i+1}. ${s.name} — ${s.score} puan</li>`).join('');
-  showOverlay(leaderboardPopup);
-}
-
-function shuffle(arr){
-  let a=[...arr];
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-  return a;
-}
-
-/* 🎊 Konfeti efekti */
-function fireConfetti(){
-  const canvas=document.getElementById('confettiCanvas');
-  const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-  canvas.style.display='block';
-
-  const confetti=[];
-  for(let i=0;i<150;i++){
-    confetti.push({
-      x:Math.random()*canvas.width,
-      y:Math.random()*canvas.height - canvas.height,
-      w:Math.random()*6+4,
-      h:Math.random()*10+6,
-      vy:Math.random()*3+2,
-      vx:(Math.random()-0.5)*2,
-      rot:Math.random()*360,
-      vr:(Math.random()-0.5)*6,
-      color:`hsl(${Math.random()*360},100%,60%)`
-    });
-  }
-
-  const start=performance.now();
-  function frame(t){
-    const elapsed=t-start;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    confetti.forEach(p=>{
-      p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
-      ctx.save();
-      ctx.translate(p.x,p.y);
-      ctx.rotate(p.rot*Math.PI/180);
-      ctx.fillStyle=p.color;
-      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-      ctx.restore();
-    });
-    if(elapsed<3000) requestAnimationFrame(frame);
-    else canvas.style.display='none';
-  }
-  requestAnimationFrame(frame);
-}
-</script>
-</body>
-</html>
+/* ✨ Shimmer Katmanı */
+const shimmerCanvas=document.getElementById('shimmer');const sctx=shimmerCanvas.getContext('2d');
+function resizeShimmer(){shimmerCanvas.width=innerWidth;shimmerCanvas.height=innerHeight;}
+window.addEventListener('resize',resizeShimmer);resizeShimmer();
+let shimmerX=-shimmerCanvas.width;
+function drawShimmer(){
+  sctx.clearRect(0,0,shimmerCanvas.width,shimmerCanvas.height);
+  let grd=sctx.createLinearGradient(shimmerX,0,shimmerX+shimmerCanvas.width/2,shimmerCanvas.height);
+  grd.addColorStop(0,'rgba(255,255,255,0)');
+  grd.addColorStop(0.5,'rgba(255,255,255,0.25)');
+  grd.addColorStop(1,'rgba(255,255,255,0)');
+  sctx.fillStyle=grd;sctx.fillRect(0,0,shimmerCanvas.width,shimmerCanvas.height);
+  shimmerX+=0.8;if(shimmerX>shimmerCanvas.width)shimmerX=-shimmerCanvas.width;
+  reques
