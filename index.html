@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>🧠 Hafıza Eşleştirme — Gelişmiş Versiyon</title>
+<title>🧠 Hafıza Eşleştirme — Responsive Deluxe</title>
 <style>
   :root {
     --accent:#f77f00;
@@ -24,11 +24,13 @@
     50% { background-position: 100% 50% }
     100% { background-position: 0% 50% }
   }
+
   canvas#bubbles {
     position:fixed; inset:0; width:100%; height:100%;
     z-index:-1; pointer-events:none; opacity:.6;
   }
 
+  /* Menü */
   #menu {
     position:fixed; inset:0; display:flex; flex-direction:column; gap:14px;
     justify-content:center; align-items:center; text-align:center;
@@ -40,6 +42,7 @@
     box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
 
+  /* Üst bar */
   #header {
     position:sticky; top:0; z-index:4; display:none;
     background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
@@ -56,26 +59,36 @@
     padding:6px 10px; border-radius:999px; cursor:pointer; font-size:14px;
   }
 
+  /* Oyun alanı */
   #board {
     display:none;
-    gap:10px; padding:12px; justify-items:center;
-    height: calc(100dvh - 70px); overflow-y:auto;
+    gap:10px; padding:12px;
+    justify-items:center;
+    height: calc(100dvh - 70px);
+    overflow-y:auto;
+    margin: 0 auto;
+    transition: max-width .3s ease;
   }
   .card {
-    width:18vw; max-width:120px; aspect-ratio:1/1;
-    border-radius:14px; overflow:hidden; cursor:pointer; perspective:900px;
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:14px;
+    overflow:hidden;
+    cursor:pointer;
+    perspective:900px;
     box-shadow:0 6px 18px rgba(0,0,0,.25);
+    background:#000;
   }
   .inner {
     width:100%; height:100%; transform-style:preserve-3d;
     transition: transform .38s cubic-bezier(.2,.8,.2,1), filter .2s;
   }
   .flipped .inner { transform: rotateY(180deg); }
-  .front, .back {
+  .front,.back {
     position:absolute; inset:0; backface-visibility:hidden; border-radius:14px;
   }
-  .front { transform: rotateY(180deg); }
-  .front img { width:100%; height:100%; object-fit:cover; }
+  .front { transform: rotateY(180deg);}
+  .front img { width:100%; height:100%; object-fit:cover; display:block; }
   .back {
     background-color:#d62828;
     background-image:
@@ -84,6 +97,7 @@
     background-size:20px 20px; border:2px solid #fff;
   }
 
+  /* Eşleşme efekti */
   .matched {
     pointer-events:none;
     border:3px solid #32d74b;
@@ -212,7 +226,7 @@ function startLevel(){
   levelEl.textContent=level;
   scoreEl.textContent=score;
   mistakes=0; flipped=[]; matchedPairs=0;
-  const pairCount=Math.min(3 + level, TOTAL_IMAGES/2); // 🧩 Başlangıçta 3 çift (6 kart)
+  const pairCount=Math.min(3 + level, TOTAL_IMAGES/2); // 6 karttan başlar
   const selected=pickUniqueRandomImages(pairCount);
   const cards=shuffle([...selected,...selected]);
   renderBoard(cards);
@@ -234,6 +248,9 @@ function renderBoard(cards){
                    cards.length <= 12 ? 4 :
                    cards.length <= 20 ? 5 : 6;
   board.style.gridTemplateColumns=`repeat(${colCount},1fr)`;
+  board.style.maxWidth = `${colCount * 150}px`; // kart boyutu ayarı
+  board.style.margin = "0 auto";
+
   cards.forEach(src=>{
     const card=document.createElement('div');
     card.className='card';
