@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>🧠 Hafıza Oyunu — Tam Ekran</title>
+<title>🧠 Hafıza Oyunu — Final Stabil</title>
 <style>
 :root {
   --accent:#f77f00;
@@ -44,8 +44,9 @@ canvas#bubbles{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-
 }
 #board{
   display:grid;justify-content:center;align-content:center;
-  width:100vw;height:100vh;gap:1.2vw;box-sizing:border-box;
-  padding-top:50px;
+  width:100vw;height:100vh;gap:1vw;box-sizing:border-box;
+  padding-top:60px;
+  z-index:1;
 }
 .card{
   border-radius:12px;overflow:hidden;cursor:pointer;perspective:900px;
@@ -81,7 +82,7 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:9;display:non
 <canvas id="confetti"></canvas>
 
 <section id="menu">
-  <h1>🧠 Hafıza Oyunu Deluxe</h1>
+  <h1>🧠 Hafıza Oyunu Stabil</h1>
   <p>43 resim · tam ekran · sesli</p>
   <button class="menu-btn" onclick="startGame(12)">🟢 Kolay (12 Kart)</button>
   <button class="menu-btn" onclick="startGame(18)">🟠 Orta (18 Kart)</button>
@@ -154,14 +155,15 @@ function renderBoard(){
   const w=(window.innerWidth*0.9)/cols;
   const h=(window.innerHeight*0.85)/rows;
   const size=Math.min(w,h);
-  cards.forEach(src=>{
+  cards.forEach((src,i)=>{
     const card=document.createElement('div');
     card.className='card';
     card.dataset.src=src;
     card.style.width=size+'px';
     card.style.height=size+'px';
+    card.style.zIndex=1; // 🔧 hiçbir kart tıklanmaz hale gelmez
     card.innerHTML=`<div class="inner">
-      <div class="front"><img src="${src}" alt=""></div>
+      <div class="front"><img src="${src}" alt="img-${i}"></div>
       <div class="back"></div>
     </div>`;
     card.addEventListener('click',()=>flipCard(card));
@@ -195,7 +197,7 @@ function flipCard(card){
       },250);
     }else{
       score=Math.max(0,score-FAIL_PENALTY);scoreEl.textContent=score;
-      setTimeout(()=>{a.classList.remove('flipped');b.classList.remove('flipped');flipped=[];},1200);
+      setTimeout(()=>{a.classList.remove('flipped');b.classList.remove('flipped');flipped=[];},1500);
     }
   }
 }
