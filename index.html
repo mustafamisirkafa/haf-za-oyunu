@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>🧠 Hafıza Oyunu — Final Stabil</title>
+<title>🧠 Hafıza Oyunu — Reset Fix</title>
 <style>
 :root {
   --accent:#f77f00;
@@ -82,7 +82,7 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:9;display:non
 <canvas id="confetti"></canvas>
 
 <section id="menu">
-  <h1>🧠 Hafıza Oyunu Stabil</h1>
+  <h1>🧠 Hafıza Oyunu — Reset Fix</h1>
   <p>43 resim · tam ekran · sesli</p>
   <button class="menu-btn" onclick="startGame(12)">🟢 Kolay (12 Kart)</button>
   <button class="menu-btn" onclick="startGame(18)">🟠 Orta (18 Kart)</button>
@@ -128,17 +128,35 @@ const board=document.getElementById('board'),
 soundToggle.addEventListener('click',()=>setSound(!soundOn));
 pauseBtn.addEventListener('click',()=>{paused=true;pauseMenu.style.display='flex';});
 resumeBtn.addEventListener('click',()=>{paused=false;pauseMenu.style.display='none';});
-quitBtn.addEventListener('click',()=>{pauseMenu.style.display='none';menu.style.display='flex';board.innerHTML='';header.style.display='none';});
+quitBtn.addEventListener('click',()=>returnToMenu());
 
 document.body.addEventListener('click',()=>[flipSound,matchSound,levelUpSound].forEach(a=>{
   a.volume=0;a.play().catch(()=>{});setTimeout(()=>{a.pause();a.currentTime=0;a.volume=1;},50)}),{once:true});
 
-function setSound(on){soundOn=on;[flipSound,matchSound,levelUpSound].forEach(a=>a.muted=!on);
-  soundToggle.textContent=on?"🔊 Ses: Açık":"🔇 Ses: Kapalı";}
+function setSound(on){
+  soundOn=on;[flipSound,matchSound,levelUpSound].forEach(a=>a.muted=!on);
+  soundToggle.textContent=on?"🔊 Ses: Açık":"🔇 Ses: Kapalı";
+}
+
+function resetGameVars(){
+  flipped=[];matchedPairs=0;score=0;paused=false;
+  scoreEl.textContent=0;
+}
+
+function returnToMenu(){
+  // tamamen sıfırla
+  resetGameVars();
+  board.innerHTML='';
+  pauseMenu.style.display='none';
+  header.style.display='none';
+  menu.style.display='flex';
+}
 
 function startGame(count){
-  cardCount=count;score=0;matchedPairs=0;flipped=[];
-  menu.style.display='none';header.style.display='flex';
+  resetGameVars();
+  cardCount=count;
+  menu.style.display='none';
+  header.style.display='flex';
   renderBoard();
 }
 
@@ -161,7 +179,7 @@ function renderBoard(){
     card.dataset.src=src;
     card.style.width=size+'px';
     card.style.height=size+'px';
-    card.style.zIndex=1; // 🔧 hiçbir kart tıklanmaz hale gelmez
+    card.style.zIndex=1;
     card.innerHTML=`<div class="inner">
       <div class="front"><img src="${src}" alt="img-${i}"></div>
       <div class="back"></div>
@@ -205,7 +223,7 @@ function flipCard(card){
 function levelComplete(){
   if(soundOn){levelUpSound.currentTime=0;levelUpSound.play().catch(()=>{});}
   alert(`🎉 Tebrikler! ${cardCount} kartı tamamladın.\nToplam Puan: ${score}`);
-  menu.style.display='flex';header.style.display='none';board.innerHTML='';
+  returnToMenu();
 }
 
 function shuffle(arr){let a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
